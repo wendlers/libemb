@@ -22,7 +22,8 @@ Currently "libemb" contains the following helper libraries:
 * libconio
 
 	- console IO, currently done on the UART configured by "libserial"
-	- methods for printing strings and numbers, including tiny version of "printf"
+	- methods for printing strings and numbers
+	- includes tiny version of "printf"
 
 * libshell
 
@@ -37,8 +38,11 @@ And the following driver libraries:
 
 	- API for the Nordic nRF24l01+ wireless module
 	- initialization of the SPI bus to communicate with the module
-	- helper functions to configure the nRF24l01 into one of its modes: SB, ESB or ESB with payload
-	- helper functions to read and modify the configuration registers of the module
+	- helper functions to configure the nRF24l01 into one of its modes: 
+		- SB, 
+		- ESB
+		- ESB with payload
+	- helper functions to read/modify the conf-registers of the module
 
 
 Supported Targets
@@ -113,5 +117,5 @@ If you use a different compiler etc., you could change the settings in the "comm
 Usage
 -----
 
-For usage examples etc. visit the project homepage at http://gpio.kaltpost.de.
+For usage examples etc. visit the project homepage at: http://gpio.kaltpost.de/
 
