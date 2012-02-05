@@ -1,0 +1,35 @@
+libemb/tests
+(c) 2011-2012 Stefan Wendler
+sw@kaltpost.de
+http://gpio.kaltpost.de/
+
+
+Introduction
+------------
+
+The following sobdirectories provide firmware for testing the various "libemb" APIs. For a description of the purpose of each test, see the README provided in each test directory. 
+
+
+Compilation
+------------
+
+To compile a test, make sure, "libemb" libraries are already compiled. Then in the subdirectory of each test use the following commands to build the firmware for your target:
+
+For the STM32F100:
+
+TARCH=STM32_100 make clean all
+
+For the STM32F103:
+ 
+TARCH=STM32_103 make clean all
+
+This will produce the firmware binary in the "bin" subdirectory.
+
+
+Flashing
+------------
+
+This highly depends on the programmer you use. For an OpenOCD supported programmer, the variable "OOCD_IF" could be set to the OpenOCD interface configuration of you programmer.  E.g. if you use the "flyswatter", flashing could be done by issuing the following command in one of the test directories: 
+
+OOCD_IF=interface/flyswatter.cfg make flash-target
+

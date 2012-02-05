@@ -1,0 +1,14 @@
+libemb/tests
+(c) 2011-2012 Stefan Wendler
+sw@kaltpost.de
+http://gpio.kaltpost.de/
+
+This test is part of "libemb".
+
+
+Introduction
+------------
+
+Test for "libnrf24l01". Firmware implements a simple test server which sends an upcounting number as payload to a client and receives back ani other upcounting number as ACK payload.  The received data is printed out on the first USART at 38400 bauds.  The server configures the nRF24l01 into Enhanced Shockburst mode with ACK payload.  
+
+For instructions on compiling and flashing the README in toplevel test-directory.

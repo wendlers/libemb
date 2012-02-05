@@ -1,0 +1,14 @@
+libemb/tests/conio
+(c) 2011-2012 Stefan Wendler
+sw@kaltpost.de
+http://gpio.kaltpost.de/
+
+This test is part of "libemb".
+
+
+Introduction
+------------
+
+Basic test of functions provided by libconio. Prints out strings to the default (serial) console by using the methods provided by libconio. To check the test results, connect a USB to TTL serial converter to the first USART of your STM32, and connect to the serial port with 38400 bauds.
+
+For instructions on compiling and flashing the README in toplevel test-directory.
