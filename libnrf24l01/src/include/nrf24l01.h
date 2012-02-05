@@ -161,8 +161,8 @@ int nrf_read_reg(unsigned char reg, nrf_reg_buf *buf);
 /**
  * Write contents of a register to the nRF24l01.
  *
- * @param[in]   reg	register to write (see NRF_REG_* form nrf24l01_regs.h)
- * @parami[in] *buf	the value(s) to write the register
+ * @param[in]  reg	register to write (see NRF_REG_* form nrf24l01_regs.h)
+ * @param[in] *buf	the value(s) to write the register
  * @return 			number of bytes written to the register
  */
 int nrf_write_reg(unsigned char reg, nrf_reg_buf *buf);
