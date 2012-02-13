@@ -48,4 +48,4 @@ flash-target: target
 clean:
 	make -C $(SRCDIR) clean
 	rm -fr doc/gen
-	rm -f bin/*
+	rm -f bin/firmware.*

@@ -52,4 +52,4 @@ deploy: deploy-bin
 clean:
 	make -C $(SRCDIR) clean
 	rm -fr doc/gen
-	rm -f lib/*
+	rm -f lib/*.a
