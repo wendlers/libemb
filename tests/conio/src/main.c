@@ -17,20 +17,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef MSP430
+#include <msp430.h>
+#else
 #include <libopencm3/stm32/f1/rcc.h>
+#endif
 
 #include "serial.h"
 #include "conio.h"
 
 void clock_init(void)
 {
+#ifdef MSP430
+	WDTCTL = WDTPW + WDTHOLD;  // Stop WDT
+	BCSCTL1 = CALBC1_1MHZ;     // Set range
+	DCOCTL = CALDCO_1MHZ;      // SMCLK = DCO = 1MHz
+#else
 #ifdef STM32_100
 	rcc_clock_setup_in_hse_8mhz_out_24mhz();
 #else
 	rcc_clock_setup_in_hse_8mhz_out_72mhz();
 #endif
+#endif
 }
 
+/*
 void delay(unsigned long n)
 {
 	unsigned long i;
@@ -40,52 +51,64 @@ void delay(unsigned long n)
 		while(i--) __asm__("nop");
 	}
 }
+*/
 
 int main(void)
 {
 	clock_init();
-	serial_init(38400);
 
-	cio_print("nRF2401 v0.1, ConioTest\n\r\n\r");
+#ifdef MSP430
+	serial_init(9600);
+	__enable_interrupt();
+#else
+	serial_init(38400);
+#endif
+	serial_send_blocking(0);
+
+	cio_print("conio\n\r");
 
 	// Test simple print operations
-	//
 
-	cio_print("---- TEST printi ----\n\r");
-	cio_print("Print int '0': ");
+	cio_print("printi\n\r");
+	cio_print("'0': ");
 	cio_printi(0);
 	cio_print("\n\r");
 
-	cio_print("Print int '1234567890': ");
+#ifdef MSP430
+	cio_print("'12345': ");
+	cio_printi(12345);
+#else
+	cio_print("'1234567890': ");
 	cio_printi(1234567890);
+#endif
 	cio_print("\n\r");
 
-	cio_print("---- TEST printb ----\n\r");
-	cio_print("Print intb(8) '0' (00000000): ");
+	cio_print("printb\n\r");
+	cio_print("(8) '0' (00000000): ");
 	cio_printb(0, 8);
 	cio_print("\n\r");
 
-	cio_print("Print intb(8) '1' (00000001): ");
+	cio_print("(8) '1' (00000001): ");
 	cio_printb(1, 8);
 	cio_print("\n\r");
 
-	cio_print("Print intb(8) '42' (00101010): ");
+	cio_print("(8) '42' (00101010): ");
 	cio_printb(42, 8);
 	cio_print("\n\r");
 
-	cio_print("Print intb(8) '151' (10010111): ");
+	cio_print("(8) '151' (10010111): ");
 	cio_printb(151, 8);
 	cio_print("\n\r");
 
-	cio_print("Print intb(8) '255' (11111111): ");
+	cio_print("(8) '255' (11111111): ");
 	cio_printb(255, 8);
 	cio_print("\n\r");
 
-	cio_print("Print intb(16) '255' (0000000011111111): ");
+	cio_print("(16) '255' (0000000011111111): ");
 	cio_printb(255, 16);
 	cio_print("\n\r");
 
-	cio_print("Print intb(4) '151' (0111): ");
+	cio_print("(4) '151' (0111): ");
 	cio_printb(151, 4);
 	cio_print("\n\r");
 
@@ -105,25 +128,27 @@ int main(void)
     u =  12345;
     l = -1234567890;
     n =  1234567890;
-    x = 0xABCD;
+    x =  0xABCD;
 
-	cio_printf("---- TEST printf ----\n\r");
+	cio_printf("printf\n\r");
 
-    cio_printf("String        %s\n\r", s);
-    cio_printf("Char          %c\n\r", c);
-    cio_printf("Integer       %i\n\r", i);
-    cio_printf("Unsigned      %u\n\r", u);
-    cio_printf("Long          %l\n\r", l);
-    cio_printf("uNsigned loNg %n\n\r", n);
-    cio_printf("heX           %x\n\r", x);
+    cio_printf("s %s\n\r", s);
+    cio_printf("c %c\n\r", c);
+    cio_printf("i %i\n\r", i);
+    cio_printf("u %u\n\r", u);
+    cio_printf("l %l\n\r", l);
+    cio_printf("n %n\n\r", n);
+    cio_printf("x %x\n\r", x);
 
-    cio_printf("multiple args %s %c %i %u %l %n %x\n\r", s, c, i, u, l, n, x);
+    cio_printf("all %s %c %i %u %l %n %x\n\r", s, c, i, u, l, n, x);
 
-	cio_printf("---- DONE ----\n\r");
+	cio_printf("DONE\n\r");
+
 
 	while (1) {
+#ifndef MSP430
 		__asm__("nop");
+#endif
 	}
-
 	return 0;
 }

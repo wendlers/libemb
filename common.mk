@@ -3,23 +3,31 @@
 #
 # Stefan Wendler, sw@kaltpost.de
 ##
-
+#
 # compiler prefix
+ifeq ($(TARCH),MSP430)
+PREFIX  ?= msp430-
+else
 PREFIX	?= arm-none-eabi-
-# PREFIX	?= arm-elf-
+endif
 
 CC			 = $(PREFIX)gcc
 LD			 = $(PREFIX)gcc
 OBJCOPY		 = $(PREFIX)objcopy
 OBJDUMP		 = $(PREFIX)objdump
 
+ifeq ($(TARCH),MSP430)
+INCDIR		+= -I./include 
+CFLAGS		+= -Os -mmcu=msp430g2231 -Wall -Wextra $(INCDIR) 
+LDFLAGS     += -mmcu=msp430g2231 $(LIBDIR) $(LIBS)
+else
 INCDIR		+= -I./include -I$(HOME)/sat/arm-none-eabi/include
 CFLAGS		+= -Os -g -Wall -Wextra -fno-common -mcpu=cortex-m3 -mthumb -msoft-float -MD $(INCDIR) -DSTM32F1
-
 LDSCRIPT	?= $(BINARY).ld
 LIBDIR		+= -L$(HOME)/sat/arm-none-eabi/lib -L$(HOME)/sat/arm-none-eabi/lib/stm32/f1
 LIBS		+= -lopencm3_stm32f1
 LDFLAGS		+= $(LIBDIR) $(LIBS) -T$(LDSCRIPT) -nostartfiles -Wall,--gc-sections -mthumb -march=armv7 -mfix-cortex-m3-ldrd -msoft-float
+endif
 
 # where to put generated binaries to
 BINDIR		?= ../bin
