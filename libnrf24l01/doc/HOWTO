@@ -1,0 +1,206 @@
+libemb/libnrf24l01
+(c) 2011-2012 Stefan Wendler
+sw@kaltpost.de
+http://gpio.kaltpost.de/
+
+HOWTO use 
+
+nRF24l01(+) C-library for ARM-Cortex-M3 based STM32 MCUs
+========================================================
+
+
+Introduction
+------------
+
+This HOWTO introduces the usage of "libnrf24l" by walking you through some code snippets. For complete code have a look at the "tests/nrf-*" sources within "libemb". Also have a look in the API documentation generted by doxygen under the "doc/gen/html" directory of "libnrf24l01". 
+
+For this HOWTO, it is assumed, that you compiled and installed "libemb" as described in the README.
+
+
+Hardware Setup
+--------------
+
+See the schamitics in the "doc/schematics" subdirectory on how the nRF24l01 is to be conneccted to SPI2 of the STM32VL.
+
+
+Including libnrf24l01 Headers
+-----------------------------
+
+To use "libnrf24l01" functionality add the following include to yout sources:
+
+#include <libemb/nrf24l01/nrf24l01.h>
+
+This adds everything needed (it also includes the register definitions for you).
+
+
+Linking libnrf24l01 Library
+---------------------------
+
+To link statically against "libnrf24l01", add the following to your linker options:
+
+-lnrf24l01
+
+
+Using libnrf24l01 with Meta Data
+--------------------------------
+
+Two versions of libnrf24l01 are provided. One with meta data and one without. The version with meta data includes readable (and printable) register and field names. It also provides information if a field is read/write or read only. The meta information comes in handy when debugging nRF24l01 configuration, but takes up a lot of memory, and should not be compiled in when not needed. But if there is a need for the meta data, it could be enabled by:
+
+* passing "-DNRF_REG_DEF_META" as a compiler flag, 
+* linking against "-lnrf24l01_meta" (instead of "-lnrf24l01)
+
+For an example on how to use meta data, see e.g. "tests/nrf-server-sb/src/main.c" in function "nrf_dump_regs". 
+
+
+Initializing the Hardware
+-------------------------
+
+Before you are able to access the nRF24l01 module, the SPI bus must be properly initialized. On the STM32 the SP2 is used. To perform SPI initialization with settings suitable for the nRF24l01, call the following method:
+
+nrf_init();
+
+The following is done while initializing:
+
+* Peripheral clock for ports used by SPI2 and interrupt line are enabled
+* GPIOs for SPI and interrupt line are configured   
+* SPI2 is configured as master with SCK idle state low, data is taken on falling edge of SCK
+
+At this point, you are able to communicate with the nRF24l01 (e.g. read/write configuration registers), but the module itself is not configured yet. 
+
+
+Configuring the nNRF24l01 Through Presets
+-----------------------------------------
+
+For the main modes of the nRF24l01, there are preset methods provided to easily configure the module:
+
+Mode                                 Method
+--------------------------------------------------------------------------
+ShockBurst (SB)                      nrf_preset_sb
+EnhancedShockburst (ESB)             nrf_preset_esb
+EnhancedShockburst with PL (ESBPL)   nrf_preset_esbpl
+
+Each of the mentioned preset methods configures one given address as PX address and as RX address on pipe 0 of the RF module. The data-rate is set to 1MBit and RF power is set to 0db (max.) for all presets.
+
+
+** ShockBurst (SB)
+
+Configures the RF to use ShockBurst by disabling auto ACK and auto retry. CRC is enabled. To use SB call "nrf_preset_sb" after you initialized the hardware:
+
+1. Define the address for TX and RX on pipe 0:
+ 
+static nrf_reg_buf addr;
+
+addr.data[0] = 1;
+addr.data[1] = 2;
+addr.data[2] = 3;
+addr.data[3] = 4;
+addr.data[4] = 5;
+
+2. Setup nRF24l01 for SB
+
+- primery RX (use NRF_MODE_PTX for primery TX) 
+- RF channel 2400 + 40 
+- payload width 1 byte 
+- use "addr" as address for TX and RX on pipe 0: 
+
+nrf_preset_sb(NRF_MODE_PRX, 40, 1, &addr);
+
+3. Wait for radio to power up
+
+delay(100000);
+
+
+* EnhancedShockburst (ESB) * 
+
+Configures the RF to use EnhancedShockburst by enabling auto ACK and auto retry. CRS is enabled. To use SB call "nrf_preset_esb" after you initialized the hardware:
+
+1. See SB
+
+2. Setup nRF24l01 for ESB
+
+- primery RX (use NRF_MODE_PTX for primery TX) 
+- RF channel 2400 + 40 
+- payload width 1 byte 
+- set number of TX retrys to 3
+- set retry delay to 250us
+- use "addr" as address for TX and RX on pipe 0: 
+
+nrf_preset_esb(NRF_MODE_PRX, 40, 1, 3, NRF_RT_DELAY_250, &addr);
+
+3. See SB
+
+
+* EnhancedShockburst with PL (ESBPL) *
+
+Configures the RF to use EnhancedShockburst with payload by enabling auto ACK and auto retry, ACK playload and dynamic payload length. CRS is enabled.
+
+For more details on the different modes of the nRF24l01+ module see the datasheet from Nordic and their application note on ShockBurst. The presets will be explained by example later on.
+
+1. See SB
+
+2. Setup nRF24l01 for ESBPL
+
+- primery RX (use NRF_MODE_PTX for primery TX) 
+- RF channel 2400 + 40 
+- payload width 1 byte 
+- set number of TX retrys to 3
+- set retry delay to 250us
+- use "addr" as address for TX and RX on pipe 0: 
+
+nrf_preset_esbpl(NRF_MODE_PRX, 40, 1, 3, NRF_RT_DELAY_250, &addr);
+
+3. See SB
+
+
+Read-/Write Registers
+---------------------
+
+To read or wirte the registers of the nRF24l01, the following methods are available:
+
+Method             Description
+-------------------------------------------------------------------------------
+nrf_read_reg       Read contents of whole register (all fields)
+nrf_get_reg_field  Get certain field form a register read by "nrf_read_reg"
+nrf_set_reg_field  Set certain field in a regsiter read by "nrf_read_reg"
+nrf_write_reg      Write back a register
+
+
+Note, that some of the config registers/fields are only allowed to be written when the readio is powered off! E.g. you must power off the radio bevor you change its mode from PTX to PRX or vice versa.
+
+
+* Get Field Value *
+
+The value of a certain field is optained in three steps (e.g. check if the RX fifo is full):
+
+1. Define buffer to hold register data
+
+nrf_reg_buf status;
+
+2. Read register which contains field of interest
+ 
+- Name register of interest through one of the defined registers beginning with "NRF_REG_*"
+- pass in pointer to buffer defined in 1)
+ 
+nrf_read_reg(NRF_REG_FIFO_STATUS, &status);
+
+3. Get field value
+
+- Name register of interest through one of the defined registers beginning with "NRF_REG_*"
+- Name field of interest through one of the defined fields  beginning with "NRF_REGF_*"
+- pass in pointer to buffer defined in 1) and read in 2)
+
+unsigned char value = nrf_get_reg_field(NRF_REG_FIFO_STATUS, NRF_REGF_FIFO_RX_FULL, &status);
+
+
+* Write Field Value *
+
+The value of a certain field could be modiefied in four steps:
+
+1. See above
+
+2. See above
+
+3. Set field Value
+
+4. Write register back
+
