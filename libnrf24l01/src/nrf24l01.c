@@ -346,6 +346,13 @@ void nrf_preset_sb(unsigned char mode, unsigned char rf_ch, unsigned char pw, nr
      nrf_read_reg(NRF_REG_RF_CH, &buf);
      nrf_set_reg_field(NRF_REG_RF_CH, NRF_REGF_RF_CH, &buf, rf_ch);
      nrf_write_reg(NRF_REG_RF_CH, &buf);
+	 
+	 // Setup Data-Rate to 1MBit and RF power to 0db
+     nrf_read_reg(NRF_REG_RF_SETUP, &buf);
+     nrf_set_reg_field(NRF_REG_RF_SETUP, NRF_REGF_RF_DR , &buf, 0);
+     nrf_set_reg_field(NRF_REG_RF_SETUP, NRF_REGF_RF_PWR, &buf, 3);
+     nrf_write_reg(NRF_REG_RF_SETUP, &buf);
+
 
      // Power up radio
      nrf_read_reg(NRF_REG_CONFIG, &buf);
@@ -423,6 +430,13 @@ void nrf_preset_esb(
      nrf_read_reg(NRF_REG_RF_CH, &buf);
      nrf_set_reg_field(NRF_REG_RF_CH, NRF_REGF_RF_CH, &buf, rf_ch);
      nrf_write_reg(NRF_REG_RF_CH, &buf);
+    
+     // Setup Data-Rate to 1MBit and RF power to 0db
+     nrf_read_reg(NRF_REG_RF_SETUP, &buf);
+     nrf_set_reg_field(NRF_REG_RF_SETUP, NRF_REGF_RF_DR , &buf, 0);
+     nrf_set_reg_field(NRF_REG_RF_SETUP, NRF_REGF_RF_PWR, &buf, 3);
+     nrf_write_reg(NRF_REG_RF_SETUP, &buf);
+
 
      // Power up radio
      nrf_read_reg(NRF_REG_CONFIG, &buf);

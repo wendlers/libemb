@@ -53,7 +53,7 @@ void nrf_init(void)
      spi_enable_software_slave_management(SPI2);
      spi_set_nss_high(SPI2);
 
-     /* PCLOCK/256 as clock. */
+     /* PCLOCK/8 as clock. */
      spi_set_baudrate_prescaler(SPI2, SPI_CR1_BR_FPCLK_DIV_8);
 
      /* We want to control everything and generate the clock -> master. */
