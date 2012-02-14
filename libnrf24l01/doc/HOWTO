@@ -168,20 +168,20 @@ nrf_write_reg      Write back a register
 Note, that some of the config registers/fields are only allowed to be written when the readio is powered off! E.g. you must power off the radio bevor you change its mode from PTX to PRX or vice versa.
 
 
-* Get Field Value *
+* Read Field Value *
 
 The value of a certain field is optained in three steps (e.g. check if the RX fifo is full):
 
 1. Define buffer to hold register data
 
-nrf_reg_buf status;
+nrf_reg_buf buf;
 
 2. Read register which contains field of interest
  
 - Name register of interest through one of the defined registers beginning with "NRF_REG_*"
 - pass in pointer to buffer defined in 1)
  
-nrf_read_reg(NRF_REG_FIFO_STATUS, &status);
+nrf_read_reg(NRF_REG_FIFO_STATUS, &buf);
 
 3. Get field value
 
@@ -189,18 +189,106 @@ nrf_read_reg(NRF_REG_FIFO_STATUS, &status);
 - Name field of interest through one of the defined fields  beginning with "NRF_REGF_*"
 - pass in pointer to buffer defined in 1) and read in 2)
 
-unsigned char value = nrf_get_reg_field(NRF_REG_FIFO_STATUS, NRF_REGF_FIFO_RX_FULL, &status);
+unsigned char value = nrf_get_reg_field(NRF_REG_FIFO_STATUS, NRF_REGF_FIFO_RX_FULL, &buf);
 
 
 * Write Field Value *
 
-The value of a certain field could be modiefied in four steps:
+The value of a certain field could be modiefied in four steps (here as an example we change the RF channel):
 
-1. See above
+1. See get field value 
 
-2. See above
+2. Read register which contains field of interest
 
-3. Set field Value
+nrf_read_reg(NRF_REG_RF_CH, &buf);
+
+3. Set field value
+
+- Name register of interest through one of the defined registers beginning with "NRF_REG_*"
+- Name field of interest through one of the defined fields  beginning with "NRF_REGF_*"
+- Pass in pointer to buffer defined in 1) and read in 2)
+- Pass new value for the field
+
+nrf_set_reg_field(NRF_REG_RF_CH, NRF_REGF_RF_CH, &buf, 42);
 
 4. Write register back
+
+- Name register of interest through one of the defined registers beginning with "NRF_REG_*"
+- Pass in pointer to buffer defined in 1), read in 2) and modified in 3)
+
+nrf_write_reg(NRF_REG_RF_CH, &buf);
+
+
+* Send Data on the PTX Device *
+
+Sending data with "nrf_send" or "nrf_send_blocking" is only possible if the radio is configured to be in PTX mode. Sending could be done blocking or non-blocking. In both cases three steps must be performed: 
+
+1. Define payload
+
+- Create set "size" member to payload width given when calling one of the preset methods
+- Fill in your data in the "data" member array
+
+nrf_payload   p;
+p.size = 1;
+p.data[0] = 123;
+
+2. Send payload
+
+- Pass pointer to your payload
+- Returns number of bytes send
+
+int ret =  nrf_send(&p);
+
+- For blocking send use:
+
+int ret =  nrf_send_blocking(&p);
+
+3. Check result
+
+- If return value is smaller then payload size something went wrong
+ 
+
+* Send Data on the PRX Device *
+
+Sending data on the PRX device is only possible, if both, the PTX and the PRX device are configured to use ESB with ACK payload. In this case, "nrf_write_ack_pl" could be used to set the payload which then is transferred as response to  the next message from the PTX device:
+
+1. Define ACK Payload
+
+nrf_payload   p;
+p.size = 1;
+p.data[0] = 123;
+
+2. Write ACK payload
+
+- Pass pointer to your ACK payload
+
+nrf_write_ack_payload(&p);
+
+
+* Receive Data on the PRX Device *
+
+Receiving data with "nrf_receive" or "nrf_receive_blocking" is only possible if the radio is configured into PRX mode. Receiving could be blocking or non-blocking:
+
+1. Prepare your payload to receive
+
+- make sure "size" member is set to configured payload width of the radio
+
+nrf_payload   p;
+p.size = 1;
+
+2. Receive payload
+
+- Pass pointer to payload buffer 
+
+int res = nrf_receive_blocking(&p);
+
+3. Check result
+
+- If return value is smaller then payload size something went wrong
+ 
+
+* Receive Data on the PTX Device *
+
+Receiving data on the PTX device is only possible, if both, the PTX and the PRX device are configured to use ESB with ACK payload. In this case, "nrf_read_ack_pl" could be used to get the payload which was returned as response to the last message send to the PRX device:
+
 
