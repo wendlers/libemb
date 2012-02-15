@@ -171,7 +171,9 @@ int nrf_write_reg(unsigned char reg, nrf_reg_buf *buf);
  * Send payload non-blocking through the nRF24l01.
  *
  * @param[in] *payload	the payload to send
- * @return 				number of bytes sent
+ * @return 				number of bytes sent or NRF_ERR_TX_FULL if TX buffer is full
+ * 						or NRF_ERR_MAX_RT if auto ACK with retry was enabled and
+ * 						payload was not delivered after configured retrys
  */
 int nrf_send(nrf_payload *payload);
 
@@ -179,7 +181,9 @@ int nrf_send(nrf_payload *payload);
  * Send payload blocking through the nRF24l01.
  *
  * @param[in] *payload	the payload to send
- * @return 				number of bytes sent
+ * @return 				number of bytes sent or NRF_ERR_TX_FULL if TX buffer is full
+ * 						or NRF_ERR_MAX_RT if auto ACK with retry was enabled and
+ * 						payload was not delivered after configured retrys
  */
 int nrf_send_blocking(nrf_payload *payload);
 
@@ -188,7 +192,8 @@ int nrf_send_blocking(nrf_payload *payload);
  *
  * @param	*payload	the payload received, "size" member of payload
  * 						must be set to correct payload size (as configured for nRF)
- * @return				number of bytes received
+ * @return				number of bytes received or NRF_ERR_RX_FULL when RX buffer is full
+d
  */
 int nrf_receive(nrf_payload *payload);
 
@@ -197,7 +202,8 @@ int nrf_receive(nrf_payload *payload);
  *
  * @param	*payload	the payload received, "size" member of payload
  * 						must be set to correct payload size (as configured for nRF)
- * @return				number of bytes received
+ * @return				number of bytes received or NRF_ERR_RX_FULL when RX buffer is full
+d
  */
 int nrf_receive_blocking(nrf_payload *payload);
 
