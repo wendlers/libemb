@@ -12,7 +12,7 @@ nRF24l01(+) C-library for ARM-Cortex-M3 based STM32 MCUs
 Introduction
 ------------
 
-This HOWTO introduces the usage of "libnrf24l" by walking you through some code snippets. For complete code have a look at the "tests/nrf-*" sources within "libemb". Also have a look in the API documentation generted by doxygen under the "doc/gen/html" directory of "libnrf24l01". 
+This HOWTO introduces the usage of "libnrf24l01" by walking you through some code snippets. For complete code have a look at the "tests/nrf-*" sources within "libemb". Also have a look at the API documentation generted by doxygen under the "doc/gen/html" directory of "libnrf24l01". 
 
 For this HOWTO, it is assumed, that you compiled and installed "libemb" as described in the README.
 
@@ -22,11 +22,13 @@ Hardware Setup
 
 See the schamitics in the "doc/schematics" subdirectory on how the nRF24l01 is to be conneccted to SPI2 of the STM32VL.
 
+Note: libnrf24l01 operates the hardware in the "possible" mode. This mode is described in the nRF24l01+ specification 2.0 in the statei diagram "Figure 3. radio control state diagram". This is because the CE pin of the module is driven high permanently and not unter MCU control. The mode was choosen to be compatible with some boards around providing a socket for the nRF24l01+ but driving CE permanently high (e.g. the IFLAT-32 does so). Thus, if you choose to connect CE to a output pin of your MCU, make sure it is driven high before initializing the RF module.  
+
 
 Including libnrf24l01 Headers
 -----------------------------
 
-To use "libnrf24l01" functionality add the following include to yout sources:
+To use "libnrf24l01" functionality add the following include to your sources:
 
 #include <libemb/nrf24l01/nrf24l01.h>
 
@@ -36,42 +38,41 @@ This adds everything needed (it also includes the register definitions for you).
 Linking libnrf24l01 Library
 ---------------------------
 
-To link statically against "libnrf24l01", add the following to your linker options:
+To link against "libnrf24l01", add the following to your linker options:
 
 -lnrf24l01
 
 
-Using libnrf24l01 with Meta Data
---------------------------------
+* Using libnrf24l01 with Meta Data *
 
-Two versions of libnrf24l01 are provided. One with meta data and one without. The version with meta data includes readable (and printable) register and field names. It also provides information if a field is read/write or read only. The meta information comes in handy when debugging nRF24l01 configuration, but takes up a lot of memory, and should not be compiled in when not needed. But if there is a need for the meta data, it could be enabled by:
+Two versions of libnrf24l01 are provided. One with meta data and one without. The version with meta data includes readable (and printable) register and field names. It also provides information if a field is read/write or read only. The meta information comes in handy when debugging a nRF24l01 configuration, but takes up a lot of memory on the MCU. Thus, do not compile in meta data if not needed. But if there is a need for the meta data, it could be enabled on compiletime by:
 
 * passing "-DNRF_REG_DEF_META" as a compiler flag, 
-* linking against "-lnrf24l01_meta" (instead of "-lnrf24l01)
+* linking against "-lnrf24l01_meta" instead of "-lnrf24l01"
 
-For an example on how to use meta data, see e.g. "tests/nrf-server-sb/src/main.c" in function "nrf_dump_regs". 
+For an example on how to use meta data, see e.g. "tests/nrf-server-sb/src/main.c", function "nrf_dump_regs". 
 
 
 Initializing the Hardware
 -------------------------
 
-Before you are able to access the nRF24l01 module, the SPI bus must be properly initialized. On the STM32 the SP2 is used. To perform SPI initialization with settings suitable for the nRF24l01, call the following method:
+Before you are able to access the nRF24l01 module, the SPI bus must be properly initialized. To perform SPI initialization with settings suitable for the nRF24l01, call the following method:
 
 nrf_init();
 
-The following is done while initializing:
+What this does for you is:
 
-* Peripheral clock for ports used by SPI2 and interrupt line are enabled
-* GPIOs for SPI and interrupt line are configured   
-* SPI2 is configured as master with SCK idle state low, data is taken on falling edge of SCK
+* Enable peripheral clock for ports used by SPI2 and the interrupt line 
+* Configure the GPIOs for SPI and the interrupt line   
+* Configure SPI bus as master with SCK idle state low, data to be taken on falling edge of SCK
 
-At this point, you are able to communicate with the nRF24l01 (e.g. read/write configuration registers), but the module itself is not configured yet. 
+After calling "nrf_init",  you are able to communicate with the nRF24l01 over SPI (e.g. read/write configuration registers). Note, that the module itself is not configured yet. Configuration of the module follows in the next section. 
 
 
 Configuring the nNRF24l01 Through Presets
 -----------------------------------------
 
-For the main modes of the nRF24l01, there are preset methods provided to easily configure the module:
+For the main modes of the nRF24l01, the following preset methods are provided to easily configure the module:
 
 Mode                                 Method
 --------------------------------------------------------------------------
@@ -79,12 +80,13 @@ ShockBurst (SB)                      nrf_preset_sb
 EnhancedShockburst (ESB)             nrf_preset_esb
 EnhancedShockburst with PL (ESBPL)   nrf_preset_esbpl
 
-Each of the mentioned preset methods configures one given address as PX address and as RX address on pipe 0 of the RF module. The data-rate is set to 1MBit and RF power is set to 0db (max.) for all presets.
+Each of this preset methods configure one given address as PX address and as RX address on pipe 0 on the RF module. The data-rate is set to 1MBit and RF power is set to 0db (max.). Also you have to choose for each preset, if the module should be a PTX (primery TX) or PRX (primery RX) device. A PTX device primerily transmits data and a PRX device primerily receives data. Primerily means, that there are ways (ACK and ACK payload) to make a PTX device receive data, and a PRX device send data. 
 
+Lets have a more detailed look on the three operation modes:
 
-** ShockBurst (SB)
+* ShockBurst (SB) *
 
-Configures the RF to use ShockBurst by disabling auto ACK and auto retry. CRC is enabled. To use SB call "nrf_preset_sb" after you initialized the hardware:
+Configures the RF to use ShockBurst by disabling auto ACK and auto retry. CRC is enabled. To use SB call "nrf_preset_sb" after you initialized the hardware with "nrf_init":
 
 1. Define the address for TX and RX on pipe 0:
  
@@ -98,32 +100,32 @@ addr.data[4] = 5;
 
 2. Setup nRF24l01 for SB
 
-- primery RX (use NRF_MODE_PTX for primery TX) 
+- Primery RX (use NRF_MODE_PTX for primery TX) 
 - RF channel 2400 + 40 
-- payload width 1 byte 
-- use "addr" as address for TX and RX on pipe 0: 
+- Payload width 1 byte 
+- Use "addr" as address for TX and RX on pipe 0 
 
 nrf_preset_sb(NRF_MODE_PRX, 40, 1, &addr);
 
-3. Wait for radio to power up
+3. Wait for radio to power up (10us at least)
 
 delay(100000);
 
 
 * EnhancedShockburst (ESB) * 
 
-Configures the RF to use EnhancedShockburst by enabling auto ACK and auto retry. CRS is enabled. To use SB call "nrf_preset_esb" after you initialized the hardware:
+Configures the RF to use EnhancedShockburst by enabling auto ACK and auto retry. CRC is enabled. To use ESB call "nrf_preset_esb" after you initialized the hardware:
 
 1. See SB
 
 2. Setup nRF24l01 for ESB
 
-- primery RX (use NRF_MODE_PTX for primery TX) 
+- Primery RX (use NRF_MODE_PTX for primery TX) 
 - RF channel 2400 + 40 
-- payload width 1 byte 
-- set number of TX retrys to 3
-- set retry delay to 250us
-- use "addr" as address for TX and RX on pipe 0: 
+- Payload width 1 byte 
+- Set number of TX retrys to 3
+- Set retry delay to 250us
+- Use "addr" as address for TX and RX on pipe 0: 
 
 nrf_preset_esb(NRF_MODE_PRX, 40, 1, 3, NRF_RT_DELAY_250, &addr);
 
@@ -132,25 +134,25 @@ nrf_preset_esb(NRF_MODE_PRX, 40, 1, 3, NRF_RT_DELAY_250, &addr);
 
 * EnhancedShockburst with PL (ESBPL) *
 
-Configures the RF to use EnhancedShockburst with payload by enabling auto ACK and auto retry, ACK playload and dynamic payload length. CRS is enabled.
-
-For more details on the different modes of the nRF24l01+ module see the datasheet from Nordic and their application note on ShockBurst. The presets will be explained by example later on.
+Configures the RF to use EnhancedShockburst with payload by enabling auto ACK and auto retry, ACK playload and dynamic payload length. CRC is enabled.
 
 1. See SB
 
 2. Setup nRF24l01 for ESBPL
 
-- primery RX (use NRF_MODE_PTX for primery TX) 
+- Primery RX (use NRF_MODE_PTX for primery TX) 
 - RF channel 2400 + 40 
-- payload width 1 byte 
-- set number of TX retrys to 3
-- set retry delay to 250us
-- use "addr" as address for TX and RX on pipe 0: 
+- Payload width 1 byte 
+- Set number of TX retrys to 3
+- Set retry delay to 250us
+- Use "addr" as address for TX and RX on pipe 0: 
 
 nrf_preset_esbpl(NRF_MODE_PRX, 40, 1, 3, NRF_RT_DELAY_250, &addr);
 
 3. See SB
 
+
+For more details on the different modes of the nRF24l01+ module see the datasheet and application note nAN24-12) from Nordic and their application note on ShockBurst. The presets will be explained by example later on.
 
 Read-/Write Registers
 ---------------------
@@ -219,6 +221,89 @@ nrf_set_reg_field(NRF_REG_RF_CH, NRF_REGF_RF_CH, &buf, 42);
 nrf_write_reg(NRF_REG_RF_CH, &buf);
 
 
+Send/Receive Data
+-----------------
+
+To send/receive data, the following methods are provided:
+
+Method                   Description
+--------------------------------------------------------------------------------------------------
+nrf_send                 Send payload non-blocking to device with address set for TX
+nrf_send_blocking        Send payload blocking to device with address set for TX
+nrf_receive              Receive non-blocking payload with address matching on of the RX addresses
+nrf_receive_blockinig    Receive blocking payload with address matching on of the RX addresses
+nrf_write_ack_payload    Write payload to sent back on ACK for next incomming message
+nrf_read_ack_payload     Read ACK payload received as response to last sent message 
+
+
+* General Usage of the Mehtods in Different Modes *
+
+The following figures show wich methods are usable with wich of the modes of the nRF24l01 modules. It is assumed, that the devices are confured to use the following addresses:
+
+PTX:	TX-address: AA BB CC DD EE, RX-address pipe 0: AA BB CC DD EE
+
+ShockBurst (SB)
+
+PTX >-- nrf_send(_blocking) --> {AIR} -- nrf_receive(_blocking) --> PRX
+
+EnhancedShockBurst (ESB)
+
+    >-- nrf_send(_blocking) --> {AIR} -- nrf_receive(_blocking) --> 
+PTX |                                                             | PRX
+    <-- (ACK) ----------------< {AIR} ------------------- (ACK) --<
+
+Note: ACK package is sent automatically by radio.
+
+EnhancedShockBurst with ACK payload (ESBPL)
+
+                                         nrf_write_ack_payload  --+
+                                                                  | 
+PTX >-- nrf_send(_blocking) --> {AIR} -- nrf_receive(_blocking) --> PRX 
+    |                                                             |     
+    <-- nrf_read_ack_payload -< {AIR} ----------- (ACK with PL) --<
+
+Note: The PRX device has to set the data it wants to send to the PRX device as ACK payload prior receiving a incomming package. The ACK payload is then automatically sent back to the PTX device which may read it out just after succesffully sending a message (consider sending blocking when doing so).
+
+
+* Addressing Schema Used by the nRF24l01 Modules *
+
+The packages sent with the radio allways have a defined endpoint in form of a address (5 byte by default). Thus, to make sure a package reaches its desired destination, the addresses on both, the PTX and the PRX device must be set correctly. 
+
+On the PTX device, the register for TX address is set to the address which then is used as destionation address in each package sent out. 
+
+On the PRX device, the address for which to receive packages has to be set in one of the six RX registers. The nordic radio supports up to six pipes for receiving, where each could have its own address.
+
+If you use ESBPL mode, the PTX device also must set a RX address, and the PRX device must set a TX address. The easiest way to get a PTX and a PRX device to communicate with each other, is to set on both the TX address as well as the RX address for pipe 0 all to the same address. This is exactely what the earlier descirbed prest operations do. If you need to configure the addresses individually, just use the methods for operating on registers. E.g. to set the PTX address:
+
+1. Define 5 byte address
+
+static nrf_reg_buf addr;
+
+addr.data[0] = 1;
+addr.data[1] = 2;
+addr.data[2] = 3;
+addr.data[3] = 4;
+addr.data[4] = 5;
+
+2. Write to TX address register
+
+nrf_write_reg(NRF_REG_TX_ADDR, addr);
+
+To write the RX address of pipe 1: 
+
+1. Enable the pipe by setting the register field to 1
+	
+static nrf_reg_buf buf;
+
+nrf_read_reg(NRF_REG_EN_RXADDR, &buf);
+nrf_set_reg_field(NRF_REG_EN_RXADDR, NRF_REGF_ERX_P1,  &buf, 1);
+nrf_write_reg(NRF_REG_EN_RXADDR, &buf);
+
+2. Write RX address register for pipe
+
+nrf_write_reg(NRF_REG_RX_ADDR_P1, addr);
+ 
+
 * Send Data on the PTX Device *
 
 Sending data with "nrf_send" or "nrf_send_blocking" is only possible if the radio is configured to be in PTX mode. Sending could be done blocking or non-blocking. In both cases three steps must be performed: 
@@ -246,7 +331,8 @@ int ret =  nrf_send_blocking(&p);
 3. Check result
 
 - If return value is smaller then payload size something went wrong
- 
+- The result is NRF_ERR_TX_FULL if TX buffer was full
+- The result is NRF_ERR_MAX_RT if auto ACK with retry was enabled and message could not be sent after the configured retrys 
 
 * Send Data on the PRX Device *
 
@@ -282,13 +368,35 @@ p.size = 1;
 
 int res = nrf_receive_blocking(&p);
 
+- to receive non-blocking
+
+int res = nrf_receive(&p);
+
 3. Check result
 
 - If return value is smaller then payload size something went wrong
- 
+- The result is NRF_ERR_RX_FULL if RX buffer was full
 
 * Receive Data on the PTX Device *
 
-Receiving data on the PTX device is only possible, if both, the PTX and the PRX device are configured to use ESB with ACK payload. In this case, "nrf_read_ack_pl" could be used to get the payload which was returned as response to the last message send to the PRX device:
+Receiving data on the PTX device is only possible, if both, the PTX and the PRX device are configured to use ESB with ACK payload. In this case, "nrf_read_ack_pl" could be used to get the payload which was returned as response to the last message sent to the PRX device:
+
+1. Prepare your ACK payload to receive
+
+- make sure "size" member is set to configured payload width of the radio
+
+nrf_payload   p;
+p.size = 1;
+
+2. Read received ACK payload
+
+- Pass pointer to payload buffer 
+
+int res = nrf_read_ack_pl(&p);
+
+3. Check result
+
+- If return value is smaller then payload size something went wrong
 
 
+ 
