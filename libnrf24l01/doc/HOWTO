@@ -116,7 +116,15 @@ delay(100000);
 
 Configures the RF to use EnhancedShockburst by enabling auto ACK and auto retry. CRC is enabled. To use ESB call "nrf_preset_esb" after you initialized the hardware:
 
-1. See SB
+1. Define the address for TX and RX on pipe 0:
+ 
+static nrf_reg_buf addr;
+
+addr.data[0] = 1;
+addr.data[1] = 2;
+addr.data[2] = 3;
+addr.data[3] = 4;
+addr.data[4] = 5;
 
 2. Setup nRF24l01 for ESB
 
@@ -129,14 +137,24 @@ Configures the RF to use EnhancedShockburst by enabling auto ACK and auto retry.
 
 nrf_preset_esb(NRF_MODE_PRX, 40, 1, 3, NRF_RT_DELAY_250, &addr);
 
-3. See SB
+3. Wait for radio to power up (10us at least)
+
+delay(100000);
 
 
 * EnhancedShockburst with PL (ESBPL) *
 
 Configures the RF to use EnhancedShockburst with payload by enabling auto ACK and auto retry, ACK playload and dynamic payload length. CRC is enabled.
 
-1. See SB
+1. Define the address for TX and RX on pipe 0:
+ 
+static nrf_reg_buf addr;
+
+addr.data[0] = 1;
+addr.data[1] = 2;
+addr.data[2] = 3;
+addr.data[3] = 4;
+addr.data[4] = 5;
 
 2. Setup nRF24l01 for ESBPL
 
@@ -149,15 +167,17 @@ Configures the RF to use EnhancedShockburst with payload by enabling auto ACK an
 
 nrf_preset_esbpl(NRF_MODE_PRX, 40, 1, 3, NRF_RT_DELAY_250, &addr);
 
-3. See SB
+3. Wait for radio to power up (10us at least)
 
+delay(100000);
 
-For more details on the different modes of the nRF24l01+ module see the datasheet and application note nAN24-12) from Nordic and their application note on ShockBurst. The presets will be explained by example later on.
+For more details on the different modes of the nRF24l01+ module see the nRF24l01+ specification 2.0 and the application note nAN24-12 from Nordic.
+
 
 Read-/Write Registers
 ---------------------
 
-To read or wirte the registers of the nRF24l01, the following methods are available:
+To read or write the registers of the nRF24l01, the following methods are available:
 
 Method             Description
 -------------------------------------------------------------------------------
@@ -167,12 +187,12 @@ nrf_set_reg_field  Set certain field in a regsiter read by "nrf_read_reg"
 nrf_write_reg      Write back a register
 
 
-Note, that some of the config registers/fields are only allowed to be written when the readio is powered off! E.g. you must power off the radio bevor you change its mode from PTX to PRX or vice versa.
+Note, that some of the config registers/fields are only allowed to be written when the readio is powered off! E.g. you must power off the radio bevor you change its mode from PTX to PRX or vice versa. For a complete list of registers and fields see "libnrf24l01/src/include/nrf24l01_regs.h" in the "libemb" project and the nRF24l01+ specification 2.0.
 
 
 * Read Field Value *
 
-The value of a certain field is optained in three steps (e.g. check if the RX fifo is full):
+The value of a certain field is optained in three steps:
 
 1. Define buffer to hold register data
 
@@ -188,17 +208,19 @@ nrf_read_reg(NRF_REG_FIFO_STATUS, &buf);
 3. Get field value
 
 - Name register of interest through one of the defined registers beginning with "NRF_REG_*"
-- Name field of interest through one of the defined fields  beginning with "NRF_REGF_*"
-- pass in pointer to buffer defined in 1) and read in 2)
+- Name field of interest through one of the defined fields beginning with "NRF_REGF_*"
+- Pass in pointer to buffer defined in 1) and read in 2)
 
 unsigned char value = nrf_get_reg_field(NRF_REG_FIFO_STATUS, NRF_REGF_FIFO_RX_FULL, &buf);
 
 
 * Write Field Value *
 
-The value of a certain field could be modiefied in four steps (here as an example we change the RF channel):
+The value of a certain field could be modiefied in four steps:
 
-1. See get field value 
+1. Define buffer to hold register data
+
+nrf_reg_buf buf; 
 
 2. Read register which contains field of interest
 
@@ -230,17 +252,15 @@ Method                   Description
 --------------------------------------------------------------------------------------------------
 nrf_send                 Send payload non-blocking to device with address set for TX
 nrf_send_blocking        Send payload blocking to device with address set for TX
-nrf_receive              Receive non-blocking payload with address matching on of the RX addresses
-nrf_receive_blockinig    Receive blocking payload with address matching on of the RX addresses
+nrf_receive              Receive non-blocking payload with address matching one of the RX addresses
+nrf_receive_blockinig    Receive blocking payload with address matching one of the RX addresses
 nrf_write_ack_payload    Write payload to sent back on ACK for next incomming message
 nrf_read_ack_payload     Read ACK payload received as response to last sent message 
 
 
 * General Usage of the Mehtods in Different Modes *
 
-The following figures show wich methods are usable with wich of the modes of the nRF24l01 modules. It is assumed, that the devices are confured to use the following addresses:
-
-PTX:	TX-address: AA BB CC DD EE, RX-address pipe 0: AA BB CC DD EE
+The following figures show which methods are usable with wich of the modes of the nRF24l01 modules. 
 
 ShockBurst (SB)
 
@@ -262,18 +282,18 @@ PTX >-- nrf_send(_blocking) --> {AIR} -- nrf_receive(_blocking) --> PRX
     |                                                             |     
     <-- nrf_read_ack_payload -< {AIR} ----------- (ACK with PL) --<
 
-Note: The PRX device has to set the data it wants to send to the PRX device as ACK payload prior receiving a incomming package. The ACK payload is then automatically sent back to the PTX device which may read it out just after succesffully sending a message (consider sending blocking when doing so).
+Note: The PRX device has to set the data it wants to send to the PRX device as ACK payload prior receiving an incomming package. The ACK payload is then automatically sent back to the PTX device which mreads it out after succesffully sending a message (consider sending blocking when doing so).
 
 
 * Addressing Schema Used by the nRF24l01 Modules *
 
-The packages sent with the radio allways have a defined endpoint in form of a address (5 byte by default). Thus, to make sure a package reaches its desired destination, the addresses on both, the PTX and the PRX device must be set correctly. 
+All packages sent with the radio have a defined destination address (5 byte by default). Thus, to make sure a package reaches its desired destination, the addresses on both, the PTX and the PRX device must be set correctly. 
 
-On the PTX device, the register for TX address is set to the address which then is used as destionation address in each package sent out. 
+On the PTX device, the register for TX address set is used for each package sent out. 
 
 On the PRX device, the address for which to receive packages has to be set in one of the six RX registers. The nordic radio supports up to six pipes for receiving, where each could have its own address.
 
-If you use ESBPL mode, the PTX device also must set a RX address, and the PRX device must set a TX address. The easiest way to get a PTX and a PRX device to communicate with each other, is to set on both the TX address as well as the RX address for pipe 0 all to the same address. This is exactely what the earlier descirbed prest operations do. If you need to configure the addresses individually, just use the methods for operating on registers. E.g. to set the PTX address:
+If you use ESBPL mode, the PTX device also must set a RX address, and the PRX device must set a TX address too. The easiest way to get a PTX and a PRX device to communicate with each other, is to set on both the TX address and the RX address for pipe 0 to the same address. This is exactely what the earlier descirbed preset operations do. If you need to configure the addresses individually, just use the methods for operating on registers. E.g. to set the PTX address:
 
 1. Define 5 byte address
 
@@ -310,7 +330,7 @@ Sending data with "nrf_send" or "nrf_send_blocking" is only possible if the radi
 
 1. Define payload
 
-- Create set "size" member to payload width given when calling one of the preset methods
+- Set "size" member to correct payload width
 - Fill in your data in the "data" member array
 
 nrf_payload   p;
@@ -320,7 +340,6 @@ p.data[0] = 123;
 2. Send payload
 
 - Pass pointer to your payload
-- Returns number of bytes send
 
 int ret =  nrf_send(&p);
 
@@ -331,14 +350,18 @@ int ret =  nrf_send_blocking(&p);
 3. Check result
 
 - If return value is smaller then payload size something went wrong
-- The result is NRF_ERR_TX_FULL if TX buffer was full
+- The result is NRF_ERR_TX_FULL if TX buffer is full
 - The result is NRF_ERR_MAX_RT if auto ACK with retry was enabled and message could not be sent after the configured retrys 
+
 
 * Send Data on the PRX Device *
 
-Sending data on the PRX device is only possible, if both, the PTX and the PRX device are configured to use ESB with ACK payload. In this case, "nrf_write_ack_pl" could be used to set the payload which then is transferred as response to  the next message from the PTX device:
+Sending data on the PRX device is only possible, if both, the PTX and the PRX device are configured to use ESB with ACK payload. In this case, "nrf_write_ack_pl" could be used to set the payload which then is transferred as response to the next message from the PTX device:
 
 1. Define ACK Payload
+
+- Make sure "size" member is set correct payload
+- Set payload in "data" member array
 
 nrf_payload   p;
 p.size = 1;
@@ -353,11 +376,11 @@ nrf_write_ack_payload(&p);
 
 * Receive Data on the PRX Device *
 
-Receiving data with "nrf_receive" or "nrf_receive_blocking" is only possible if the radio is configured into PRX mode. Receiving could be blocking or non-blocking:
+Receiving data with "nrf_receive" or "nrf_receive_blocking" is only possible if the radio is configured to PRX mode. Receiving could be blocking or non-blocking:
 
 1. Prepare your payload to receive
 
-- make sure "size" member is set to configured payload width of the radio
+- Make sure "size" member is set to correct payload width
 
 nrf_payload   p;
 p.size = 1;
@@ -368,14 +391,14 @@ p.size = 1;
 
 int res = nrf_receive_blocking(&p);
 
-- to receive non-blocking
+- To receive non-blocking
 
 int res = nrf_receive(&p);
 
 3. Check result
 
 - If return value is smaller then payload size something went wrong
-- The result is NRF_ERR_RX_FULL if RX buffer was full
+- The result is NRF_ERR_RX_FULL if RX buffer is full
 
 * Receive Data on the PTX Device *
 
@@ -383,7 +406,7 @@ Receiving data on the PTX device is only possible, if both, the PTX and the PRX 
 
 1. Prepare your ACK payload to receive
 
-- make sure "size" member is set to configured payload width of the radio
+- Make sure "size" member is set to correct payload width
 
 nrf_payload   p;
 p.size = 1;
@@ -392,11 +415,8 @@ p.size = 1;
 
 - Pass pointer to payload buffer 
 
-int res = nrf_read_ack_pl(&p);
+nrf_read_ack_pl(&p);
 
-3. Check result
-
-- If return value is smaller then payload size something went wrong
 
 
  
