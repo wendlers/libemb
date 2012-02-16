@@ -79,8 +79,8 @@ void delay(unsigned long n)
 
 void serirq_init(void)
 {
-    serial_rb_init(&srx, &(srx_buf[0]), 1500);
-    serial_rb_init(&stx, &(stx_buf[0]), 250);
+    serial_rb_init(&srx, &(srx_buf[0]), 64);
+    serial_rb_init(&stx, &(stx_buf[0]), 64);
 
 	/* Enable the USART1 interrupt. */
 	nvic_enable_irq(NVIC_USART1_IRQ);
