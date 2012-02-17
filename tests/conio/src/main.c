@@ -29,9 +29,9 @@
 void clock_init(void)
 {
 #ifdef MSP430
-	WDTCTL = WDTPW + WDTHOLD;  // Stop WDT
-	BCSCTL1 = CALBC1_1MHZ;     // Set range
-	DCOCTL = CALDCO_1MHZ;      // SMCLK = DCO = 1MHz
+    WDTCTL = WDTPW + WDTHOLD;
+    BCSCTL1 = CALBC1_1MHZ;
+    DCOCTL  = CALDCO_1MHZ;
 #else
 #ifdef STM32_100
 	rcc_clock_setup_in_hse_8mhz_out_24mhz();
@@ -40,18 +40,6 @@ void clock_init(void)
 #endif
 #endif
 }
-
-/*
-void delay(unsigned long n)
-{
-	unsigned long i;
-
-	while(n--) {
-		i = 2;
-		while(i--) __asm__("nop");
-	}
-}
-*/
 
 int main(void)
 {

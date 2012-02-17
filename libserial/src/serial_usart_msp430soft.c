@@ -25,14 +25,14 @@
 #include "serial.h"
 
 /**
- * TXD on P1.1
+ * TXD pin
  */
-#define TXD BIT1
+#define UART_TXD   		0x02 
 
 /**
- * RXD on P1.2
+ * RXD pin
  */
-#define RXD BIT2
+#define UART_RXD   		0x04
 
 /**
  * CPU freq.
@@ -42,43 +42,32 @@
 /**
  * Baudrate
  */
-#define BAUDRATE 		9600
-
-/**
- * Bit time
- */
-#define BIT_TIME        (FCPU / BAUDRATE)
+#define UART_BAUDRATE 		9600
 
 /**
  * Half bit time
  */
-#define HALF_BIT_TIME   (BIT_TIME / 2)
+#define UART_TBIT_DIV_2     (FCPU / (UART_BAUDRATE * 2))
 
 /**
- * Bit count, used when transmitting byte
+ * Bit time
  */
-static volatile uint8_t bitCount;
+#define UART_TBIT           (FCPU /  UART_BAUDRATE)
 
 /**
- * Value sent over UART when uart_putc() is called
+ * UART internal variable for TX
  */
-static volatile unsigned int TXByte;
+unsigned int  txData;                      
 
 /**
- * Value recieved once hasRecieved is set
+ * Received UART character
  */
-static volatile unsigned int RXByte;
+unsigned char rxBuffer;                   
 
 /**
- * Status for when the device is receiving
+ * Pointer to user defined ISR for receiving
  */
-static volatile bool isReceiving = false;
-
-/**
- * Lets the program know when a byte is received
- */
-static volatile bool hasReceived = false;
-
+void (*uart_rx_isr_ptr)(unsigned char c);
 
 /**
  * NOTE: baudrate is fix at 9600 for MSP430 softuart. Passing in a
@@ -86,118 +75,99 @@ static volatile bool hasReceived = false;
  */
 void serial_init(unsigned int baudrate)
 {
-    P1SEL |= TXD;
-    P1DIR |= TXD;
+	serial_msp430soft_recv_isr_ptr(0L);
 
-    P1IES |= RXD; 
-    P1IFG &= ~RXD;
-    P1IE  |= RXD;
+	P1SEL = UART_TXD + UART_RXD;            // Timer function for TXD/RXD pins
+    P1DIR |= UART_TXD;						// Set TXD to output
+	TACCTL0 = OUT;                          // Set TXD Idle as Mark = '1'
+    TACCTL1 = SCS + CM1 + CAP + CCIE;       // Sync, Neg Edge, Capture, Int
+    TACTL   = TASSEL_2 + MC_2;              // SMCLK, start in continuous mode
+}
+
+void serial_msp430soft_recv_isr_ptr(void (*isr_ptr)(unsigned char c)) 
+{
+	uart_rx_isr_ptr = isr_ptr;	
 }
 
 void serial_send(unsigned char data)
 {
-     TXByte = (unsigned int)(data);
-
-     while(isReceiving); 
-
-     CCTL0 = OUT; 		
-     TACTL = TASSEL_2 + MC_2; 		
-
-     bitCount = 0xA; 
-     CCR0 = TAR; 
-
-     CCR0 += BIT_TIME; 
-     TXByte |= 0x100; 
-     TXByte = TXByte << 1;
-
-     CCTL0 = CCIS_0 + OUTMOD_0 + CCIE + OUT;
+    TACCR0 = TAR;                           // Current state of TA counter
+    TACCR0 += UART_TBIT;                    // One bit time till first bit
+    TACCTL0 = OUTMOD0 + CCIE;               // Set TXD on EQU0, Int
+    txData = data;                          // Load global variable
+    txData |= 0x100;                        // Add mark stop bit to TXData
+    txData <<= 1;                           // Add space start bit
 }
 
 void serial_send_blocking(unsigned char data)
 {
+    while (TACCTL0 & CCIE);                 // Ensure last char got TX'd
 	serial_send(data);
-    while(CCTL0 & CCIE); 
 }
 
 unsigned char serial_recv()
 {
-	if (!hasReceived) {
-    	return 0;
-    }
-
-	return (unsigned char)(RXByte);
+	return rxBuffer;
 }
 
 unsigned char serial_recv_blocking()
 {
-	while(!hasReceived);
-	return (unsigned char)(RXByte);
+	// wait for incomming data
+	__bis_SR_register(LPM0_bits);
+	return serial_recv();
 }
 
-/**
- * ISR for RXD
- */
-interrupt(PORT1_VECTOR) PORT1_ISR(void)
+interrupt(TIMERA0_VECTOR) Timer_A0_ISR(void)
 {
-     isReceiving = true;
+    static unsigned char txBitCnt = 10;
+ 
+    TACCR0 += UART_TBIT;                    // Add Offset to CCRx
+    if (txBitCnt == 0) {                    // All bits TXed?
+        TACCTL0 &= ~CCIE;                   // All bits TXed, disable interrupt
+        txBitCnt = 10;                      // Re-load bit counter
+    }
+    else {
+        if (txData & 0x01) {
+          TACCTL0 &= ~OUTMOD2;              // TX Mark '1'
+        }
+        else {
+          TACCTL0 |= OUTMOD2;               // TX Space '0'
+        }
+        txData >>= 1;
+        txBitCnt--;
+    }
+}      
 
-     P1IE &= ~RXD; 
-     P1IFG &= ~RXD;
-
-     TACTL = TASSEL_2 + MC_2;
-     CCR0 = TAR; 
-     CCR0 += HALF_BIT_TIME;
-     CCTL0 = OUTMOD_1 + CCIE;
-
-     RXByte = 0; 
-     bitCount = 9;
-}
-
-/**
- * ISR for TXD and RXD
- */
-interrupt(TIMERA0_VECTOR) TIMERA0_ISR(void)
+interrupt(TIMERA1_VECTOR) Timer_A1_ISR(void)
 {
-     if(!isReceiving) {
-          CCR0 += BIT_TIME; 						// Add Offset to CCR0
-          if ( bitCount == 0) { 					// If all bits TXed
-               TACTL = TASSEL_2; 					// SMCLK, timer off (for power consumption)
-               CCTL0 &= ~ CCIE ; 					// Disable interrupt
-          } else {
-               if (TXByte & 0x01) {
-                    CCTL0 = ((CCTL0 & ~OUTMOD_7 ) | OUTMOD_1);  //OUTMOD_7 defines the 'window' of the field.
-               } else {
-                    CCTL0 = ((CCTL0 & ~OUTMOD_7 ) | OUTMOD_5);  //OUTMOD_7 defines the 'window' of the field.
-               }
+    static unsigned char rxBitCnt = 8;
+    static unsigned char rxData   = 0;
+ 
+    switch (TAIV) { 							 // Use calculated branching
+        case TAIV_TACCR1:                        // TACCR1 CCIFG - UART RX
+            TACCR1 += UART_TBIT;                 // Add Offset to CCRx
+            if (TACCTL1 & CAP) {                 // Capture mode = start bit edge
+                TACCTL1 &= ~CAP;                 // Switch capture to compare mode
+                TACCR1 += UART_TBIT_DIV_2;       // Point CCRx to middle of D0
+            }
+            else {
+                rxData >>= 1;
+                if (TACCTL1 & SCCI) {            // Get bit waiting in receive latch
+                    rxData |= 0x80;
+                }
+                rxBitCnt--;
+                if (rxBitCnt == 0) {             // All bits RXed?
+                    rxBuffer = rxData;           // Store in global variable
+                    rxBitCnt = 8;                // Re-load bit counter
+                    TACCTL1 |= CAP;              // Switch compare to capture mode
 
-               TXByte = TXByte >> 1;
-               bitCount --;
-          }
-     } else {
-          CCR0 += BIT_TIME; 						// Add Offset to CCR0
+                    __bic_SR_register_on_exit(LPM0_bits);  // Clear LPM0 bits from 0(SR)
 
-          if ( bitCount == 0) {
-
-               TACTL = TASSEL_2; 					// SMCLK, timer off (for power consumption)
-               CCTL0 &= ~ CCIE ; 					// Disable interrupt
-
-               isReceiving = false;
-
-               P1IFG &= ~RXD; 						// clear RXD IFG (interrupt flag)
-               P1IE |= RXD; 						// enabled RXD interrupt
-
-               if ( (RXByte & 0x201) == 0x200) { 	// Validate the start and stop bits are correct
-                    RXByte = RXByte >> 1; 			// Remove start bit
-                    RXByte &= 0xFF; 				// Remove stop bit
-                    hasReceived = true;
-               }
-          } else {
-               if ( (P1IN & RXD) == RXD) { 		// If bit is set?
-                    RXByte |= 0x400; 				// Set the value in the RXByte
-               }
-               RXByte = RXByte >> 1; 				// Shift the bits down
-               bitCount --;
-          }
-     }
+					if(uart_rx_isr_ptr != 0L) {
+						(uart_rx_isr_ptr)(rxBuffer);
+					}
+                }
+            }
+            break;
+    }
 }
-
