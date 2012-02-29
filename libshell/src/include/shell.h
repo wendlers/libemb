@@ -130,7 +130,7 @@ int shell_str_len(char *str);
  * @param[in] 	str2	second string
  * @param[in] 	len1	length of first string
  * @param[in] 	len2	length of second string
- * @return	0 if str1 euqals str2, 1 if len1 > len2, 2 if str1 != str2
+ * @return	0 if str1 euqals str2, 1 if len1 != len2, 2 if str1 != str2
  */
 int shell_str_cmp(char *str1, char *str2, int len1, int len2);
 
