@@ -36,8 +36,8 @@
 
 void serial_init(unsigned int baudrate)
 {
-	P1SEL  = UART_RXD + UART_TXD;                       
-  	P1SEL2 = UART_RXD + UART_TXD;                       
+	P1SEL    |= UART_RXD + UART_TXD;                       
+  	P1SEL2   |= UART_RXD + UART_TXD;                       
   	UCA0CTL1 |= UCSSEL_2;                   // SMCLK
 
 	unsigned char br = (unsigned char)(1000000 / (long)baudrate);

@@ -27,6 +27,15 @@
 #include "conio.h"
 #include "nrf24l01.h"
 
+/**
+ * Define delay factor based on target architecture
+ */
+#ifdef MSP430
+#define DF 1
+#else
+#define DF 10
+#endif
+
 void clock_init(void)
 {
 #ifdef MSP430
@@ -96,7 +105,7 @@ void nrf_dump_regs(nrf_regs *r) {
 void nrf_configure_sb_tx(void) {
 
 	// Set address for TX and receive on P0
- 	static nrf_reg_buf addr;
+ 	nrf_reg_buf addr;
 
 	addr.data[0] = 1;
 	addr.data[1] = 2;
@@ -106,8 +115,8 @@ void nrf_configure_sb_tx(void) {
 
 	nrf_preset_sb(NRF_MODE_PTX, 40, 1, &addr);
 
-	// Wait for radio to power up (100000 is way to much time though ...)
-	delay(100000);
+	// Wait for radio to power up
+	delay(100000 * DF);
 }
 
 int main(void)
@@ -121,8 +130,9 @@ int main(void)
 	nrf_configure_sb_tx();
 	nrf_dump_regs(&nrf_reg_def);
 
+	static nrf_payload   p;
+
 	int s;
-	nrf_payload   p;
 
 	p.size = 1;
 	p.data[0] = 0;
@@ -134,7 +144,7 @@ int main(void)
 
 		cio_printf(" - done; bytes send: %u\n\r", s);
 
-		delay(5000000);
+		delay(50000 * DF);
 
 		p.data[0]++;
 	}
