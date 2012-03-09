@@ -27,7 +27,14 @@ all: target
 world: target gen-docs
 
 target: 
+ifeq ($(TARCH),MSP430)
+	@echo "***********************************************"
+	@echo "* Not ported for MSP430                       *"
+	@echo "***********************************************"
+	@exit 0
+else
 	make -C $(SRCDIR)
+endif
 
 gen-docs: target
 	cd $(SRCDIR) && make gen-docs 

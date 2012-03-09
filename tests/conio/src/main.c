@@ -44,14 +44,7 @@ void clock_init(void)
 int main(void)
 {
 	clock_init();
-
-#ifdef MSP430
 	serial_init(9600);
-	__enable_interrupt();
-#else
-	serial_init(38400);
-#endif
-	serial_send_blocking(0);
 
 	cio_print("conio\n\r");
 
@@ -134,9 +127,7 @@ int main(void)
 
 
 	while (1) {
-#ifndef MSP430
 		__asm__("nop");
-#endif
 	}
 	return 0;
 }

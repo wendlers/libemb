@@ -27,20 +27,6 @@
  */
 void serial_init(unsigned int baudrate);
 
-
-#ifdef MSP430
-
-/**
- * Set pointer to callback (ISR) handler which gets called
- * when new data was received on the UART.
- *
- * @param[in]	*isr_ptr	function to call when data was received,
- * 							set to 0L if don't want to get callbacks
- */
-void serial_msp430soft_recv_isr_ptr(void (*isr_ptr)(unsigned char c));
-
-#endif
- 
 /**
  * Send a byte non-blocking through the default USART.
  *

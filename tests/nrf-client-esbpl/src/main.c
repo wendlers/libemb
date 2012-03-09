@@ -17,7 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef MSP430
+#include <msp430.h>
+#else
 #include <libopencm3/stm32/f1/rcc.h>
+#endif
 
 #include "serial.h"
 #include "conio.h"
@@ -25,10 +29,16 @@
 
 void clock_init(void)
 {
+#ifdef MSP430
+    WDTCTL = WDTPW + WDTHOLD;
+    BCSCTL1 = CALBC1_1MHZ;
+    DCOCTL  = CALDCO_1MHZ;
+#else
 #ifdef STM32_100
 	rcc_clock_setup_in_hse_8mhz_out_24mhz();
 #else
 	rcc_clock_setup_in_hse_8mhz_out_72mhz();
+#endif
 #endif
 }
 
@@ -104,7 +114,7 @@ void nrf_configure_esbpl_rx(void) {
 int main(void)
 {
 	clock_init();
-	serial_init(38400);
+	serial_init(9600);
 	nrf_init();
 
 	cio_print("nRF2401 v0.1 - TestClient ESBPL\n\r");

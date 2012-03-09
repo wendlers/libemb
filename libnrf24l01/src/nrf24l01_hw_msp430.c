@@ -21,55 +21,61 @@
 
 #include "nrf24l01_hw.h"
 
-#define SCLK    BIT5
-#define SDI     BIT7
-#define SDO     BIT6
+/**
+ * CS (Chip Select) at P1.4
+ */
 #define CS      BIT4
+
+/**
+ * SPI Clock at P1.5
+ */
+#define SCLK    BIT5
+
+/**
+ * SPI SOMI (Slave Out, Master In) at P1.6
+ */
+#define SOMI    BIT6
+
+/**
+ * SPI SIMO (Slave In, Master Out) at P1.7
+ */
+#define SIMO    BIT7
 
 void nrf_init(void)
 {
-    P1DIR |= SCLK | SDO | CS;
-    P1DIR &= ~SDI;
+	UCB0CTL1 = UCSWRST;
 
-    // enable SDI, SDO, SCLK, master mode, MSB, output enabled, hold in reset
-    USICTL0 = USIPE7 | USIPE6 | USIPE5 | USIMST | USIOE | USISWRST;
+    P1DIR  |= CS; 
+    P1OUT  |= CS;
+  	P1SEL  |= SOMI + SIMO + SCLK;
+  	P1SEL2 |= SOMI + SIMO + SCLK;
 
-    // SMCLK / 128
-    USICKCTL = USIDIV_7 + USISSEL_2;
+    // 3-pin, 8-bit SPI master
+    UCB0CTL0 |= UCCKPH + UCMSB + UCMST + UCSYNC; 
+	UCB0CTL1 |= UCSSEL_2;   // SMCLK
 
-    // clock phase
-    USICTL1 |= USICKPH;
-
-    // release from reset
-    USICTL0 &= ~USISWRST;
+	UCB0CTL1 &= ~UCSWRST; 
 
     nrf_spi_csh();
 }
 
 void nrf_spi_csh(void)
 {
-    // deassert CS
     P1OUT |= CS;
 }
 
 void nrf_spi_csl(void)
 {
-    // assert CS
     P1OUT &= ~CS;
 }
 
 unsigned char nrf_spi_xfer_byte(unsigned char data)
 {
-    USISRL = data;
+    UCB0TXBUF = data; 
 
-    // clear interrupt flag
-    USICTL1 &= ~USIIFG;
-    // set number of bits to send, begins tx
-    USICNT=8;
+	// wait for TX 
+	while (!(IFG2 & UCB0TXIFG)); 	
 
-    // wait for tx
-    while((USICTL1 & USIIFG) != 0x01);
-
-    return (USISRL);
+	return UCB0RXBUF;
 }
 

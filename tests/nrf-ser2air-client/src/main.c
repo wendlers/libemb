@@ -17,11 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef MSP430
+#include <msp430.h>
+#else
 #include <libopencm3/stm32/f1/rcc.h>
 #include <libopencm3/stm32/f1/gpio.h>
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/nvic.h>
 #include <libopencm3/stm32/exti.h>
+#endif
 
 #include "serial.h"
 #include "conio.h"
