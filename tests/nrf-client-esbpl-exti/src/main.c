@@ -64,7 +64,7 @@ void nrf_dump_regs(nrf_regs *r) {
 
 		nrf_read_reg(i, &buf);
 
-		if(r->data[i].fields->count == 0) continue;
+		if(r->data[i].size == 0) continue;
 
 		cio_print(r->data[i].name);
 		cio_print(": ");

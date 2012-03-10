@@ -22,9 +22,7 @@ test:
 	make -C tests/nrf-client-esbpl
 	make -C tests/nrf-client-esbpl-exti
 	make -C tests/nrf-server-esbpl
-	make -C tests/nrf-ser2air-client
 	make -C tests/nrf-ser2air-client-rb
-	make -C tests/nrf-ser2air-server
 	make -C tests/nrf-ser2air-server-rb
 	make -C tests/nrf-ser2air-ptxprx-rb
 	make -C tests/conio
@@ -43,8 +41,6 @@ clean-test:
 	make -C tests/nrf-client-esbpl clean
 	make -C tests/nrf-client-esbpl-exti clean
 	make -C tests/nrf-server-esbpl clean
-	make -C tests/nrf-ser2air-client clean
-	make -C tests/nrf-ser2air-server clean
 	make -C tests/nrf-ser2air-client-rb clean
 	make -C tests/nrf-ser2air-server-rb clean
 	make -C tests/nrf-ser2air-ptxprx-rb clean
