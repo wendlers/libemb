@@ -131,7 +131,7 @@ void nrf_configure_esbpl_tx(void) {
 	addr.data[3] = 4;
 	addr.data[4] = 5;
 
- 	// set devicde into ESB mode as PTX, channel 40, 2 byte payload, 3 retrys, 500ms delay
+ 	// set devicde into ESB mode as PTX
 	nrf_preset_esbpl(NRF_MODE_PTX, 40, PL_SIZE + 1, 10, NRF_RT_DELAY_500, &addr);
 
 	// Wait for radio to power up 

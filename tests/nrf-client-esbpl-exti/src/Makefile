@@ -6,7 +6,8 @@ INCDIR  += -I../../../libconio/src/include
 LIBDIR 	+= -L../../../libnrf24l01/lib
 LIBDIR  += -L../../../libserial/lib
 LIBDIR  += -L../../../libconio/lib
-LIBS	+= -lnrf24l01_meta -lserial -lconio
+#LIBS	+= -lnrf24l01_meta -lserial -lconio
+LIBS	+= -lnrf24l01 -lserial -lconio
 
 ifeq ($(TARCH),STM32_100)
 LDSCRIPT = ../../firmware_stm32_100.ld
@@ -16,7 +17,7 @@ LDSCRIPT = ../../firmware_stm32_103.ld
 CFLAGS   = -DSTM32_103
 endif
 
-CFLAGS  += -DNRF_REG_DEF_META
+#CFLAGS  += -DNRF_REG_DEF_META
 
 include ../../../common.mk
 
