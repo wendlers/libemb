@@ -4,8 +4,8 @@ sw@kaltpost.de
 http://gpio.kaltpost.de/
 
 
-Shell building C-library for ARM-Cortex-M3 based STM32 MCUs
-===========================================================
+Shell building C-library for ARM-Cortex-M3 based STM32 MCUs and MSP430G2553 MCUs
+================================================================================
 
 
 Introduction

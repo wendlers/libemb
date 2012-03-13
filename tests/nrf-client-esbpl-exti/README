@@ -11,7 +11,7 @@ Introduction
 
 Test for "libnrf24l01". Firmware implements a simple test client which receives a payload form a server and sends back an upcounting number as ACK payload.  To detect arival of new data on the nRF24l01, the interrupt line of the nRF is used as external interrupt. 
 
-The received data is printed out on the first USART at 38400 bauds.  The client configures the nRF24l01 into Enhanced Shockburst mode with ACK payload.  
+The received data is printed out on the first UART at 9600 bauds.  The client configures the nRF24l01 into Enhanced Shockburst mode with ACK payload.  
 
 To make this example work, make sure, the SERVER is started before this CLIENT! 
 

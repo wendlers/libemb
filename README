@@ -3,14 +3,14 @@ libemb
 sw@kaltpost.de
 http://gpio.kaltpost.de/
 
-C-library for ARM-Cortex-M3 based STM32 MCUs
-============================================
+C-library for ARM-Cortex-M3 based STM32 MCUs and MSP430G2553 MCUs
+=================================================================
 
 
 Introduction
 ------------
 
-"libemb" is a collection of libraries which try to make things needed in many MCU based projects more convinient. It includes helbers for console output, USART usage, as well es drivers for specific hardware. "libemb" relays on "libopencm3". 
+"libemb" is a collection of libraries which try to make things needed in many MCU based projects more convinient. It includes helbers for console output, USART usage, as well es drivers for specific hardware. STM32 version of "libemb" relays on "libopencm3", MSP430 version uses the headers that come with msp430-gcc. 
 
 Currently "libemb" contains the following helper libraries:
 
@@ -53,17 +53,30 @@ Currently the following ARM-Cortex-M3 targets are supported:
 * STM32F100 (tested on the STM32VL Discovery)
 * STM32F103 (tested on the IFLAT-32)
 
+And the following MSP430 MCUs are supported:
+
+* MSP430G2553 (tested with TI Launchpad)
+
 MCU/hardware specific stuff is clearly seperated from the rest, so porting to a different target (or base library) should not be a big deal.
 
 
 Compilation
 ------------
 
-"libemb" depends on "libopencm3". The compilation steps described here assume, that you installed "libopencm3" allong with the "summon-arm-toolchain", located in its default location "~/sat". 
+STM32: "libemb" depends on "libopencm3". The compilation steps described here assume, that you installed "libopencm3" allong with the "summon-arm-toolchain", located in its default location "~/sat". 
+
+MSP430: the project is written for msp430-gcc on Linux (I used v4.5.3 which is available as package on ubuntu). For flashing the "mspdebug" tool was used (also from the Ubuntu package). It is assumed, you installed a working msp430-gcc on your system.
+
+
+* Compile Libraries for STM32 *
 
 To compile the libraries, change to the toplevel directory "libemb" and issue:
 
 make
+
+* Compile LIbraries for MSP430 *
+
+TARCH=MSP430 make
 
 This will produce the various libraries in the "lib" directory of each of the subprojects.
 
@@ -73,11 +86,25 @@ You could copy the libraries to a location you like, along with the header files
 Installation
 ------------
 
+* Install for STM32 *
+
 To instal the libraries and headers to the default location which is "$HOME/sat/arm-none-eabi", type the following:
 
 make install
 
-The libraries then go to "$HOME/sat/arm-none-eabi/lib", and the headers go to "$HOME/sat/arm-none-eabi/include/libemb/<subproject>/". If yout don't like that location specify a different one by setting "INSTDIR":
+The libraries then go to "$HOME/sat/arm-none-eabi/lib", and the headers go to "$HOME/sat/arm-none-eabi/include/libemb/<subproject>/".
+
+
+* Install for MSP430 *
+
+To instal the libraries and headers to the default location which is "$HOME/msp430", type the following:
+
+TARCH=MSP430 make install
+
+The libraries then go to "$HOME/msp430/lib", and the headers go to "$HOME/msp430/include/libemb/<subproject>/".
+
+
+If yout don't like that location specify a different one by setting "INSTDIR":
 
 INSTDIR=<your-location> make install
 
@@ -85,7 +112,7 @@ INSTDIR=<your-location> make install
 Compilation of the Tests
 ------------------------
 
-Within the directory "test", various test firmwares are located (see the README that comes with each test for more information). While compiling the tests, make sure, to do this for the proper target MCU. Currently the targets STM32F103 (which is the default target) and STM32F100 are supported.
+Within the directory "test", various test firmwares are located (see the README that comes with each test for more information). While compiling the tests, make sure, to do this for the proper target MCU. Currently the targets STM32F103 (which is the default target) and STM32F100 and MSP430 are supported.
 
 To compile the tests for the STM32F100:
 
@@ -94,6 +121,11 @@ TARCH=STM32_100 make test
 And to compile the tests for the STM32F103:
 
 TARCH=STM32_103 make test
+
+And for the MSP430G2553:
+
+TARCH=MSP430 make test
+
 
 To flash a test firmware to your device, you could use the "flash-target" make target which is available in the makefile of each test (not in the toplevel makefile). For more details see the README provided for each test. 
 

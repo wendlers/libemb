@@ -9,6 +9,6 @@ This test is part of "libemb".
 Introduction
 ------------
 
-Test for "libnrf24l01". Firmware implements a simple test server which sends a payload to a client. Status is printed out on the first USART at 38400 bauds. The server configures the nRF24l01 into Enhanced Shockburst mode.  
+Test for "libnrf24l01". Firmware implements a simple test server which sends a payload to a client. Status is printed out on the first USART at 9600 bauds. The server configures the nRF24l01 into Enhanced Shockburst mode.  
 
 For instructions on compiling and flashing the README in toplevel test-directory.

@@ -3,14 +3,14 @@ libemb/libnrf24l01
 sw@kaltpost.de
 http://gpio.kaltpost.de/
 
-nRF24l01(+) C-library for ARM-Cortex-M3 based STM32 MCUs
-========================================================
+nRF24l01(+) C-library for ARM-Cortex-M3 based STM32 MCUs and MSP430G2553 MCUs
+=============================================================================
 
 
 Introduction
 ------------
 
-"libnrf24l01" is part of "libemb". It provides a simple to use API for accessing the Nordic nRF24l01+ wireless modules. The current library supports STM32 MCUs, but is easy portable to other MCUs, since the HW specific code is seperated from the rest. Accessing the STM32 HW is done through "libopencm3". Thus, the only dependency "librf24l01" has is the one to "libopencm3". There are no dependencies to other libraries of the "libemb" project. 
+"libnrf24l01" is part of "libemb". It provides a simple to use API for accessing the Nordic nRF24l01+ wireless modules. The current library supports STM32 MCUs and MSP430G2553 MCUs, but is easy portable to other MCUs, since the HW specific code is seperated from the rest. Accessing the STM32 HW is done through "libopencm3", thus the STM32 version of "librf24l01" depends on "libopencm3". There are no dependencies to other libraries of the "libemb" project. 
 
 For detailed building instructions see the top-level README of "libemb" 
 
@@ -18,7 +18,7 @@ For detailed building instructions see the top-level README of "libemb"
 Hardware Setup
 ------------
 
-See the schamitics in the "doc/schematics" subdirectory on how the nRF24l01 is to be conneccted to SPI2 of the STM32VL.
+See the schamitics in the "doc/schematics" subdirectory on how the nRF24l01 is to be conneccted to SPI2 of the STM32VL or to USCI_B SPI of the MSP430.
 
 
 Usage

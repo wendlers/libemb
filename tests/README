@@ -23,6 +23,10 @@ For the STM32F103:
  
 TARCH=STM32_103 make clean all
 
+And for the MSP430G2553:
+
+TARCH=MSP430 make clean all
+
 This will produce the firmware binary in the "bin" subdirectory.
 
 
@@ -33,3 +37,4 @@ This highly depends on the programmer you use. For an OpenOCD supported programm
 
 OOCD_IF=interface/flyswatter.cfg make flash-target
 
+For the MSP430 "mspdebug" is used as default.

@@ -9,6 +9,6 @@ This test is part of "libemb".
 Introduction
 ------------
 
-Basic test of functions provided by libconio. Prints out strings to the default (serial) console by using the methods provided by libconio. To check the test results, connect a USB to TTL serial converter to the first USART of your STM32, and connect to the serial port with 38400 bauds.
+Basic test of functions provided by libconio. Prints out strings to the default (serial) console by using the methods provided by libconio. To check the test results, connect a USB to TTL serial converter to the first USART of your STM32, or to first UART on USCI_A on the MSP430, and connect to the serial port with 9600 bauds.
 
 For instructions on compiling and flashing the README in toplevel test-directory.
