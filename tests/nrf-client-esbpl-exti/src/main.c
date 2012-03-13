@@ -73,13 +73,14 @@ void exti_init()
 #ifdef MSP430
 
 	/*
- 	 * Configure P1.3 as input, with IRQ triggered on falling edge
+ 	 * Configure P2.0 as input, with IRQ triggered on falling edge
  	 */
 
-     P1IES |=  BIT3;      // Hi/Lo edge interrupt
-     P1IFG &= ~BIT3;      // Clear flag before enabling interrupt
-     P1IE  |=  BIT3;      // Enable interrupt
+    P2IES |=  BIT0;      // Hi/Lo edge interrupt
+    P2IFG &= ~BIT0;      // Clear flag before enabling interrupt
+    P2IE  |=  BIT0;      // Enable interrupt
 
+	__bis_SR_register(GIE);
 #else
 
 	/*
@@ -120,9 +121,9 @@ void nrf_configure_esbpl_rx(void)
 }
 
 #ifdef MSP430
-interrupt(PORT1_VECTOR) PORT1_ISR(void)
+interrupt(PORT2_VECTOR) PORT2_ISR(void)
 {
-    P1IFG &= ~BIT3;                 // Clear interrupt flag
+    P2IFG &= ~BIT0;                 // Clear interrupt flag
 #else
 void exti2_isr(void)
 {
@@ -152,10 +153,11 @@ void exti2_isr(void)
 int main(void)
 {
 	clock_init();
-	serial_init(38400);
+	serial_init(9600);
 	exti_init();
-	nrf_init();
+	cio_print("nRF2401 v0.1 - TestClient ESBPL-exti\n\r");
 
+	nrf_init();
 	cio_print("nRF2401 v0.1 - TestClient ESBPL-exti\n\r");
 
 	nrf_configure_esbpl_rx();
@@ -164,7 +166,7 @@ int main(void)
 	prx.size = 1;		// receive payload size 1Byte
 	ptx.size = 1;		// send payload size 1Byte
 	ptx.data[0] = 0;	// set payload to 0
-
+	
 	// Nothing to do here since ISR does all the work
 	while (1) {
 		__asm__("nop");
