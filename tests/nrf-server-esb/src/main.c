@@ -17,18 +17,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef MSP430
+#include <msp430.h>
+#else
 #include <libopencm3/stm32/f1/rcc.h>
+#endif
 
 #include "serial.h"
 #include "conio.h"
 #include "nrf24l01.h"
 
+/**
+ * Define delay factor based on target architecture
+ */
+#ifdef MSP430
+#define DF 1
+#else
+#define DF 10
+#endif
+
 void clock_init(void)
 {
+#ifdef MSP430
+    WDTCTL = WDTPW + WDTHOLD;
+    BCSCTL1 = CALBC1_1MHZ;
+    DCOCTL  = CALDCO_1MHZ;
+#else
 #ifdef STM32_100
 	rcc_clock_setup_in_hse_8mhz_out_24mhz();
 #else
 	rcc_clock_setup_in_hse_8mhz_out_72mhz();
+#endif
 #endif
 }
 
@@ -55,7 +74,7 @@ void nrf_dump_regs(nrf_regs *r) {
 
 		nrf_read_reg(i, &buf);
 
-		if(r->data[i].fields->count == 0) continue;
+		if(r->data[i].size == 0) continue;
 
 		cio_print(r->data[i].name);
 		cio_print(": ");
@@ -86,7 +105,7 @@ void nrf_dump_regs(nrf_regs *r) {
 void nrf_configure_esb_tx(void) {
 
 	// Set address for TX and receive on P0
- 	static nrf_reg_buf addr;
+ 	nrf_reg_buf addr;
 
 	addr.data[0] = 1;
 	addr.data[1] = 2;
@@ -94,17 +113,17 @@ void nrf_configure_esb_tx(void) {
 	addr.data[3] = 4;
 	addr.data[4] = 5;
 
- 	// set devicde into ESB mode as PTX, channel 40, 1 byte payload, 3 retrys, 250ms delay
+ 	// set devicde into ESB mode as PTX
 	nrf_preset_esb(NRF_MODE_PTX, 40, 1, 3, NRF_RT_DELAY_250, &addr);
-
-	// Wait for radio to power up (100000 is way to much time though ...)
-	delay(100000);
+	
+	// Wait for radio to power up
+	delay(10000 * DF);
 }
 
 int main(void)
 {
 	clock_init();
-	serial_init(38400);
+	serial_init(9600);
 	nrf_init();
 
 	cio_print("nRF2401 v0.1 - TestServer ESB\n\r");
@@ -112,8 +131,9 @@ int main(void)
 	nrf_configure_esb_tx();
 	nrf_dump_regs(&nrf_reg_def);
 
+	static nrf_payload   p;
+
 	int s;
-	nrf_payload   p;
 
 	p.size = 1;
 	p.data[0] = 0;
@@ -133,7 +153,7 @@ int main(void)
 			cio_printf(" - done; bytes send: %u\n\r", s);
 		}
 
-		delay(5000000);
+		delay(50000 * DF);
 
 		p.data[0]++;
 	}

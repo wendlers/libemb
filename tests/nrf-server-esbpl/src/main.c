@@ -17,18 +17,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef MSP430
+#include <msp430.h>
+#else
 #include <libopencm3/stm32/f1/rcc.h>
+#endif
 
 #include "serial.h"
 #include "conio.h"
 #include "nrf24l01.h"
 
+/**
+ * Define delay factor based on target architecture
+ */
+#ifdef MSP430
+#define DF 1
+#else
+#define DF 10
+#endif
+
 void clock_init(void)
 {
+#ifdef MSP430
+    WDTCTL = WDTPW + WDTHOLD;
+    BCSCTL1 = CALBC1_1MHZ;
+    DCOCTL  = CALDCO_1MHZ;
+#else
 #ifdef STM32_100
 	rcc_clock_setup_in_hse_8mhz_out_24mhz();
 #else
 	rcc_clock_setup_in_hse_8mhz_out_72mhz();
+#endif
 #endif
 }
 
@@ -55,10 +74,10 @@ void nrf_dump_regs(nrf_regs *r) {
 
 		nrf_read_reg(i, &buf);
 
-		if(r->data[i].fields->count == 0) continue;
+		if(r->data[i].size == 0) continue;
 
 		cio_print(r->data[i].name);
-		cio_print(": ");
+		cio_printf(" %u: ", r->data[i].fields->count);
 
 		for(j = 0; j < buf.size; j++) {
 			cio_printb(buf.data[j], 8);
@@ -86,7 +105,7 @@ void nrf_dump_regs(nrf_regs *r) {
 void nrf_configure_esbpl_tx(void) {
 
 	// Set address for TX and receive on P0
- 	static nrf_reg_buf addr;
+ 	nrf_reg_buf addr;
 
 	addr.data[0] = 1;
 	addr.data[1] = 2;
@@ -98,13 +117,13 @@ void nrf_configure_esbpl_tx(void) {
 	nrf_preset_esbpl(NRF_MODE_PTX, 40, 1, 3, NRF_RT_DELAY_250, &addr);
 
 	// Wait for radio to power up (100000 is way to much time though ...)
-	delay(100000);
+	delay(10000 * DF);
 }
 
 int main(void)
 {
 	clock_init();
-	serial_init(38400);
+	serial_init(9600);
 	nrf_init();
 
 	cio_print("nRF2401 v0.1 - TestServer ESBPL\n\r");
@@ -114,8 +133,8 @@ int main(void)
 
 	int s;
 
-	nrf_payload   ptx;
-	nrf_payload   prx;
+	static nrf_payload   ptx;
+	static nrf_payload   prx;
 
 	prx.size = 1;
 	ptx.size = 1;

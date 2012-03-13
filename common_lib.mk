@@ -5,14 +5,23 @@
 ##
 
 # compiler prefix
+ifeq ($(TARCH),MSP430)
+PREFIX  ?= msp430-
+else
 PREFIX	?= arm-none-eabi-
-# PREFIX	?= arm-elf-
+endif
 
 CC			 = $(PREFIX)gcc
 AR			 = $(PREFIX)ar
 
+ifeq ($(TARCH),MSP430)
+INCDIR		+= -I./include 
+CFLAGS		+= -Os -g -mmcu=msp430g2553 -Wall -Wextra $(INCDIR) 
+else
 INCDIR		+= -I./include -I$(HOME)/sat/arm-none-eabi/include
 CFLAGS		+= -Os -g -Wall -Wextra -fno-common -mcpu=cortex-m3 -mthumb -msoft-float -MD $(INCDIR) -DSTM32F1
+endif
+
 ARFLAGS		 = rcs
 
 # where to put generated libraries to

@@ -156,10 +156,6 @@ nrf_reg_fields nrf_reg_fifostat_fields = {
      },
 };
 
-nrf_reg_fields nrf_reg_na_fields = {
-     .count = 0,
-};
-
 nrf_reg_fields nrf_reg_dynpd_fields = {
      .count = 6,
      .data  = {
@@ -186,12 +182,12 @@ nrf_regs nrf_reg_def = {
      .count = 30,
      .data  = {
           REG("CONFIG", 		1, &nrf_reg_config_fields		),
-          REG("EN_AA", 		1, &nrf_reg_enaa_fields 		),
-          REG("EN_RXADDR", 	1, &nrf_reg_enrxaddr_fields 	),
-          REG("SETUP_AW", 	1, &nrf_reg_setupaw_fields 		),
+          REG("EN_AA", 			1, &nrf_reg_enaa_fields 		),
+          REG("EN_RXADDR", 		1, &nrf_reg_enrxaddr_fields 	),
+          REG("SETUP_AW", 		1, &nrf_reg_setupaw_fields 		),
           REG("SETUP_RETR", 	1, &nrf_reg_setupretr_fields 	),
-          REG("RF_CH", 		1, &nrf_reg_rfch_fields 		),
-          REG("RF_SETUP", 	1, &nrf_reg_rfsetup_fields	 	),
+          REG("RF_CH", 			1, &nrf_reg_rfch_fields 		),
+          REG("RF_SETUP", 		1, &nrf_reg_rfsetup_fields	 	),
           REG("STATUS", 		1, &nrf_reg_status_fields 		),
           REG("OBSERVE_TX", 	1, &nrf_reg_observetx_fields 	),
           REG("CD", 			1, &nrf_reg_cd_fields 			),
@@ -202,18 +198,18 @@ nrf_regs nrf_reg_def = {
           REG("RX_ADDR_P4", 	5, &nrf_reg_addr_fields 		),
           REG("RX_ADDR_P5", 	5, &nrf_reg_addr_fields 		),
           REG("TX_ADDR", 		5, &nrf_reg_addr_fields 		),
-          REG("RX_PW_P0", 	1, &nrf_reg_rxpw_fields 		),
-          REG("RX_PW_P1", 	1, &nrf_reg_rxpw_fields			),
-          REG("RX_PW_P2", 	1, &nrf_reg_rxpw_fields			),
-          REG("RX_PW_P3", 	1, &nrf_reg_rxpw_fields			),
-          REG("RX_PW_P4", 	1, &nrf_reg_rxpw_fields			),
-          REG("RX_PW_P5", 	1, &nrf_reg_rxpw_fields			),
+          REG("RX_PW_P0", 		1, &nrf_reg_rxpw_fields 		),
+          REG("RX_PW_P1", 		1, &nrf_reg_rxpw_fields			),
+          REG("RX_PW_P2", 		1, &nrf_reg_rxpw_fields			),
+          REG("RX_PW_P3", 		1, &nrf_reg_rxpw_fields			),
+          REG("RX_PW_P4", 		1, &nrf_reg_rxpw_fields			),
+          REG("RX_PW_P5", 		1, &nrf_reg_rxpw_fields			),
           REG("FIFO_STATUS", 	1, &nrf_reg_fifostat_fields 	),
-          REG("NA", 			1, &nrf_reg_na_fields 			),
-          REG("NA", 			1, &nrf_reg_na_fields 			),
-          REG("NA", 			1, &nrf_reg_na_fields 			),
-          REG("NA", 			1, &nrf_reg_na_fields 			),
-          REG("DYNDP", 		1, &nrf_reg_dynpd_fields 		),
+          REG("NA", 			0, 0 							),
+          REG("NA", 			0, 0 							),
+          REG("NA", 			0, 0 							),
+          REG("NA", 			0, 0 							),
+          REG("DYNDP", 			1, &nrf_reg_dynpd_fields 		),
           REG("FEATURE", 		1, &nrf_reg_feature_fields 		),
      },
 };

@@ -17,29 +17,46 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef MSP430
+#include <msp430.h>
+#include <legacymsp430.h>
+#else
 #include <libopencm3/stm32/f1/rcc.h>
 #include <libopencm3/stm32/f1/gpio.h>
 #include <libopencm3/stm32/nvic.h>
 #include <libopencm3/stm32/exti.h>
+#endif
 
 #include "serial.h"
 #include "conio.h"
 #include "nrf24l01.h"
 
+/**
+ * Define delay factor based on target architecture
+ */
+#ifdef MSP430
+#define DF 1
+#else
+#define DF 10
+#endif
+
+static nrf_payload   ptx;
+static nrf_payload   prx;
+
 void clock_init(void)
 {
+#ifdef MSP430
+    WDTCTL = WDTPW + WDTHOLD;
+    BCSCTL1 = CALBC1_1MHZ;
+    DCOCTL  = CALDCO_1MHZ;
+#else
 #ifdef STM32_100
 	rcc_clock_setup_in_hse_8mhz_out_24mhz();
 #else
 	rcc_clock_setup_in_hse_8mhz_out_72mhz();
 #endif
+#endif
 }
-
-// Payload to transmit as ACK payload
-nrf_payload   ptx;
-
-// Payload received from PTX
-nrf_payload   prx;
 
 void delay(unsigned long n)
 {
@@ -51,47 +68,25 @@ void delay(unsigned long n)
 	}
 }
 
-void nrf_dump_regs(nrf_regs *r) {
-#ifdef NRF_REG_DEF_META
-	int i;
-	int j;
-
-	cio_print("\n\r** START nRF2401 Register DUMP **\n\r");
-
-	nrf_reg_buf buf;
-
-	for(i = 0; i < r->count; i++) {
-
-		nrf_read_reg(i, &buf);
-
-		if(r->data[i].fields->count == 0) continue;
-
-		cio_print(r->data[i].name);
-		cio_print(": ");
-
-		for(j = 0; j < buf.size; j++) {
-			cio_printb(buf.data[j], 8);
-			cio_printf(" (%x) ", buf.data[j]);
-		}
-
-		cio_print("\n\r - ");
-
-		for(j = 0; j < r->data[i].fields->count; j++) {
-			cio_printf("%u[%u]:%s=%u ", j,
-				r->data[i].fields->data[j].size,
-				r->data[i].fields->data[j].name,
-				nrf_get_reg_field(i, j, &buf));
-		}
-
-		cio_print("-\n\r");
-	}
-
-	cio_print("** END nRF2401 Register DUMP **\n\r");
-#endif
-}
-
 void exti_init()
 {
+#ifdef MSP430
+
+	/*
+ 	 * Configure P2.0 as input, with IRQ triggered on falling edge
+ 	 */
+
+    P2IES |=  BIT0;      // Hi/Lo edge interrupt
+    P2IFG &= ~BIT0;      // Clear flag before enabling interrupt
+    P2IE  |=  BIT0;      // Enable interrupt
+
+	__bis_SR_register(GIE);
+#else
+
+	/*
+ 	 * Configure D2 as input, with IRQ triggered on falling edge 
+ 	 */
+
 	rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_IOPDEN);
 	rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_AFIOEN);
 
@@ -104,12 +99,13 @@ void exti_init()
 	exti_set_trigger(EXTI2, EXTI_TRIGGER_FALLING);
 
 	exti_enable_request(EXTI2);
+#endif
 }
 
 void nrf_configure_esbpl_rx(void)
 {
 	// Set address for TX and receive on P0
- 	static nrf_reg_buf addr;
+ 	nrf_reg_buf addr;
 
 	addr.data[0] = 1;
 	addr.data[1] = 2;
@@ -117,17 +113,22 @@ void nrf_configure_esbpl_rx(void)
 	addr.data[3] = 4;
 	addr.data[4] = 5;
 
- 	// set devicde into ESB mode as PTX, channel 40, 1 byte payload, 3 retrys, 250ms delay
+ 	// set devicde into ESB mode as PTX
 	nrf_preset_esbpl(NRF_MODE_PRX, 40, 1, 3, NRF_RT_DELAY_250, &addr);
 
-	// Wait for radio to power up (100000 is way to much time though ...)
-	delay(100000);
+	// Wait for radio to power up 
+	delay(10000 * DF);
 }
 
+#ifdef MSP430
+interrupt(PORT2_VECTOR) PORT2_ISR(void)
+{
+    P2IFG &= ~BIT0;                 // Clear interrupt flag
+#else
 void exti2_isr(void)
 {
-    exti_reset_request(EXTI2);
-
+    exti_reset_request(EXTI2);		// Clear interrupt flag
+#endif
 	int s;
 
 	// set ACK payload to next squence number
@@ -152,20 +153,20 @@ void exti2_isr(void)
 int main(void)
 {
 	clock_init();
-	serial_init(38400);
+	serial_init(9600);
 	exti_init();
-	nrf_init();
+	cio_print("nRF2401 v0.1 - TestClient ESBPL-exti\n\r");
 
+	nrf_init();
 	cio_print("nRF2401 v0.1 - TestClient ESBPL-exti\n\r");
 
 	nrf_configure_esbpl_rx();
-	nrf_dump_regs(&nrf_reg_def);
 
 	// setup payload
 	prx.size = 1;		// receive payload size 1Byte
 	ptx.size = 1;		// send payload size 1Byte
 	ptx.data[0] = 0;	// set payload to 0
-
+	
 	// Nothing to do here since ISR does all the work
 	while (1) {
 		__asm__("nop");
