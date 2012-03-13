@@ -13,7 +13,7 @@ TARGET		= libshell_v$(VERSION)
 
 # where to install to by default
 ifeq ($(TARCH),MSP430)
-INSTDIR		?= /usr/msp430
+INSTDIR		?= $(HOME)/msp430
 else
 INSTDIR		?= $(HOME)/sat/arm-none-eabi
 endif

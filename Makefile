@@ -52,7 +52,7 @@ gen-docs: lib
 	make -C libshell gen-docs 
 	make -C libnrf24l01 gen-docs 
 
-install: gen-docs 
+install:  
 	make -C libnrf24l01 install
 	make -C libserial install
 	make -C libconio install

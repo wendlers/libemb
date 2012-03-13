@@ -18,7 +18,7 @@ OBJDUMP		 = $(PREFIX)objdump
 
 ifeq ($(TARCH),MSP430)
 INCDIR		+= -I./include 
-CFLAGS		+= -Os -mmcu=msp430g2553 -Wall -Wextra $(INCDIR) 
+CFLAGS		+= -Os -g -mmcu=msp430g2553 -Wall -Wextra $(INCDIR) 
 LDFLAGS     += -mmcu=msp430g2553 $(LIBDIR) $(LIBS)
 else
 INCDIR		+= -I./include -I$(HOME)/sat/arm-none-eabi/include

@@ -16,7 +16,7 @@ AR			 = $(PREFIX)ar
 
 ifeq ($(TARCH),MSP430)
 INCDIR		+= -I./include 
-CFLAGS		+= -Os -mmcu=msp430g2553 -Wall -Wextra $(INCDIR) 
+CFLAGS		+= -Os -g -mmcu=msp430g2553 -Wall -Wextra $(INCDIR) 
 else
 INCDIR		+= -I./include -I$(HOME)/sat/arm-none-eabi/include
 CFLAGS		+= -Os -g -Wall -Wextra -fno-common -mcpu=cortex-m3 -mthumb -msoft-float -MD $(INCDIR) -DSTM32F1
