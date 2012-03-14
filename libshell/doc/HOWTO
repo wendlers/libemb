@@ -6,8 +6,8 @@ http://gpio.kaltpost.de/
 
 HOWTO use
 
-Shell building C-library for ARM-Cortex-M3 based STM32 MCUs
-===========================================================
+Shell building C-library for ARM-Cortex-M3 based STM32 MCUs and MSPG2553 MCUs
+=============================================================================
 
 Introduction
 ------------
@@ -22,6 +22,7 @@ Hardware Setup
 
 No special hardware setup is required. You may consider using "libshell" together with "libconio", in which case you may want to connect a USB-to-serial converter to your MCU (see "libconio" and "libserial" HOWTOs for more details). 
 
+NOTE: When using the TI Launchpad, "/dev/ttyACM0" could be used as serial port, but RX/TX must be crossed on the jumper bridge of the Launchpad.
 
 Including libshell Headers
 -----------------------------

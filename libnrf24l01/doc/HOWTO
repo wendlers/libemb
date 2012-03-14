@@ -5,8 +5,8 @@ http://gpio.kaltpost.de/
 
 HOWTO use 
 
-nRF24l01(+) C-library for ARM-Cortex-M3 based STM32 MCUs
-========================================================
+nRF24l01(+) C-library for ARM-Cortex-M3 based STM32 MCUs and MSP430G2553 MCUs
+=============================================================================
 
 
 Introduction
@@ -20,7 +20,7 @@ For this HOWTO, it is assumed, that you compiled and installed "libemb" as descr
 Hardware Setup
 --------------
 
-See the schamitics in the "doc/schematics" subdirectory on how the nRF24l01 is to be conneccted to SPI2 of the STM32VL.
+See the schamitics in the "doc/schematics" subdirectory on how the nRF24l01 is to be conneccted to SPI2 of the STM32VL or to USCI_B SPI of the MSP430.
 
 Note: libnrf24l01 operates the hardware in the "possible" mode. This mode is described in the nRF24l01+ specification 2.0 in the statei diagram "Figure 3. radio control state diagram". This is because the CE pin of the module is driven high permanently and not unter MCU control. The mode was choosen to be compatible with some boards around providing a socket for the nRF24l01+ but driving CE permanently high (e.g. the IFLAT-32 does so). Thus, if you choose to connect CE to a output pin of your MCU, make sure it is driven high before initializing the RF module.  
 
@@ -62,7 +62,7 @@ nrf_init();
 
 What this does for you is:
 
-* Enable peripheral clock for ports used by SPI2 and the interrupt line 
+* Enable peripheral clock for ports used by SPI and the interrupt line 
 * Configure the GPIOs for SPI and the interrupt line   
 * Configure SPI bus as master with SCK idle state low, data to be taken on falling edge of SCK
 

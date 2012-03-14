@@ -6,8 +6,8 @@ http://gpio.kaltpost.de/
 
 HOWTO use
 
-Console IO C-library for ARM-Cortex-M3 based STM32 MCUs
-=======================================================
+Console IO C-library for ARM-Cortex-M3 based STM32 MCUs and MSP430G2553 MCUs
+============================================================================
 
 Introduction
 ------------
@@ -22,6 +22,7 @@ Hardware Setup
 
 No special hardware setup is required. Just connect the RX/TX (and GND) lines of your USB to serial converter to the corresponding lines of your MCU so you could see output of "libconio" or provide some input to it (since by default "libconio" uses the serial line as device).
 
+NOTE: When using the TI Launchpad, "/dev/ttyACM0" could be used as serial port, but RX/TX must be crossed on the jumper bridge of the Launchpad.
 
 Including libconio Headers
 -----------------------------
