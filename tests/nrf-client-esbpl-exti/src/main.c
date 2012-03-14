@@ -76,9 +76,9 @@ void exti_init()
  	 * Configure P2.0 as input, with IRQ triggered on falling edge
  	 */
 
-    P2IES |=  BIT0;      // Hi/Lo edge interrupt
-    P2IFG &= ~BIT0;      // Clear flag before enabling interrupt
-    P2IE  |=  BIT0;      // Enable interrupt
+    P1IES |=  BIT0;      // Hi/Lo edge interrupt
+    P1IFG &= ~BIT0;      // Clear flag before enabling interrupt
+    P1IE  |=  BIT0;      // Enable interrupt
 
 	__bis_SR_register(GIE);
 #else
@@ -121,9 +121,9 @@ void nrf_configure_esbpl_rx(void)
 }
 
 #ifdef MSP430
-interrupt(PORT2_VECTOR) PORT2_ISR(void)
+interrupt(PORT1_VECTOR) PORT1_ISR(void)
 {
-    P2IFG &= ~BIT0;                 // Clear interrupt flag
+    P1IFG &= ~BIT0;                 // Clear interrupt flag
 #else
 void exti2_isr(void)
 {
