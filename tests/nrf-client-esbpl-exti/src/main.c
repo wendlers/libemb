@@ -155,8 +155,6 @@ int main(void)
 	clock_init();
 	serial_init(9600);
 	exti_init();
-	cio_print("nRF2401 v0.1 - TestClient ESBPL-exti\n\r");
-
 	nrf_init();
 	cio_print("nRF2401 v0.1 - TestClient ESBPL-exti\n\r");
 
