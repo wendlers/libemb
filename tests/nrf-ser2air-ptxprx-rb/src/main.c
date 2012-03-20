@@ -44,15 +44,13 @@
 static nrf_payload   ptx;
 static nrf_payload   prx;
 
-#define RB_SIZE	64
+#define RB_SIZE 32	
 
 static SERIAL_RB_Q srx_buf[RB_SIZE];
 static serial_rb srx;
 
-#ifndef MSP430
 static SERIAL_RB_Q stx_buf[RB_SIZE];
 static serial_rb stx;
-#endif
 
 #define PL_SIZE 8
 
@@ -104,13 +102,12 @@ void delay(unsigned long n)
 void serirq_init(void)
 {
     serial_rb_init(&srx, &(srx_buf[0]), RB_SIZE);
+    serial_rb_init(&stx, &(stx_buf[0]), RB_SIZE);
 
 #ifdef MSP430
     IE2 |= UCA0RXIE; 
 	__bis_SR_register(GIE);
 #else
-    serial_rb_init(&stx, &(stx_buf[0]), RB_SIZE);
-
 	/* Enable the USART1 interrupt. */
 	nvic_enable_irq(NVIC_USART1_IRQ);
 
@@ -191,6 +188,17 @@ interrupt(USCIAB0RX_VECTOR) USCI0RX_ISR(void)
         serial_rb_write(&srx, UCA0RXBUF);
 	}
 }
+
+interrupt(USCIAB0TX_VECTOR) USCI0TX_ISR(void)
+{
+	if(!serial_rb_empty(&stx)) {
+    	serial_send(serial_rb_read(&stx));
+    }
+    else {
+    	/* Disable the TX interrupt, it's no longer needed. */
+		IE2 &= ~UCA0TXIE; 
+    }
+}
 #else
 void usart1_isr(void)
 {
@@ -258,16 +266,16 @@ int main(void)
         }
 
         if(nrf_receive(&prx) != 0 && prx.data[0] > 0) {
-#ifdef MSP430
-			P1OUT |= RXTX_LED;
-            for(i = 0; i < prx.data[0]; i++) serial_send_blocking(prx.data[i + 1]);
-#else
             if(!serial_rb_full(&stx)) {
-             	gpio_set(GPIOC, RX_LED);
                 for(i = 0; i < prx.data[0]; i++) serial_rb_write(&stx, prx.data[i + 1]);
+#ifdef MSP430
+				P1OUT |= RXTX_LED;
+				IE2 |= UCA0TXIE;
+#else
+             	gpio_set(GPIOC, RX_LED);
                	USART_CR1(USART1) |= USART_CR1_TXEIE;
-            }
 #endif
+            }
     	}
 	}
 
