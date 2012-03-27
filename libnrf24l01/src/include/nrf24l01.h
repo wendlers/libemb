@@ -203,7 +203,6 @@ int nrf_receive(nrf_payload *payload);
  * @param	*payload	the payload received, "size" member of payload
  * 						must be set to correct payload size (as configured for nRF)
  * @return				number of bytes received or NRF_ERR_RX_FULL when RX buffer is full
-d
  */
 int nrf_receive_blocking(nrf_payload *payload);
 
