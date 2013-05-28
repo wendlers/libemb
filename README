@@ -31,6 +31,10 @@ Currently "libemb" contains the following helper libraries:
 	- define commands with descriptions and callback handlers
 	- does the argument parsing for you
 
+* libi2c
+
+	- i2c slave 
+	- easy I2C command handling (register read/write) from master
 
 And the following driver libraries:
 
