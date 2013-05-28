@@ -10,6 +10,7 @@ clean: clean-lib clean-test
 
 lib: 
 	make -C libserial 
+	make -C libi2c
 	make -C libconio
 	make -C libshell
 	make -C libnrf24l01 
@@ -26,9 +27,11 @@ test:
 	make -C tests/nrf-ser2air-server-rb
 	make -C tests/nrf-ser2air-ptxprx-rb
 	make -C tests/conio
+	make -C tests/i2c-slave
 
 clean-lib: 
 	make -C libserial clean
+	make -C libi2c clean
 	make -C libconio clean
 	make -C libshell clean
 	make -C libnrf24l01 clean
@@ -45,9 +48,11 @@ clean-test:
 	make -C tests/nrf-ser2air-server-rb clean
 	make -C tests/nrf-ser2air-ptxprx-rb clean
 	make -C tests/conio clean
+	make -C tests/i2c-slave clean
 
 gen-docs: lib
 	make -C libserial gen-docs
+	make -C libi2c gen-docs
 	make -C libconio gen-docs 
 	make -C libshell gen-docs 
 	make -C libnrf24l01 gen-docs 
@@ -55,6 +60,7 @@ gen-docs: lib
 install:  
 	make -C libnrf24l01 install
 	make -C libserial install
+	make -C libi2c install
 	make -C libconio install
 	make -C libshell install
 

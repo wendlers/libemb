@@ -1,0 +1,14 @@
+libemb/tests/i2c
+(c) 2011-2012 Stefan Wendler
+sw@kaltpost.de
+http://gpio.kaltpost.de/
+
+This test is part of "libemb".
+
+
+Introduction
+------------
+
+Basic test of functions provided by libconio. Firmware acts as I2C slave device. 
+
+For instructions on compiling and flashing the README in toplevel test-directory.
