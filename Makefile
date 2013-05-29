@@ -28,6 +28,7 @@ test:
 	make -C tests/nrf-ser2air-ptxprx-rb
 	make -C tests/conio
 	make -C tests/i2c-slave
+	make -C tests/i2c-slave-cmd
 
 clean-lib: 
 	make -C libserial clean
@@ -49,6 +50,7 @@ clean-test:
 	make -C tests/nrf-ser2air-ptxprx-rb clean
 	make -C tests/conio clean
 	make -C tests/i2c-slave clean
+	make -C tests/i2c-slave-cmd clean
 
 gen-docs: lib
 	make -C libserial gen-docs

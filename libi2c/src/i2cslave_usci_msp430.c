@@ -34,6 +34,26 @@
 
 static i2c_cb *i2c_callbacks;
 
+static int i2cslave_cmdproc_last_cmd;
+
+static i2c_cmd_args i2cslave_cmdproc_last_args;
+
+static i2c_cmd_res i2cslave_cmdproc_res;
+
+static void i2cslave_cmdproc_receive_cb(unsigned char data);
+
+static void i2cslave_cmdproc_transmit_cb(unsigned char volatile *data);
+
+static void i2cslave_cmdproc_start_cb();
+
+static i2c_cb i2cslave_cmdproc_cbs = {
+	.receive  = i2cslave_cmdproc_receive_cb,
+	.transmit = i2cslave_cmdproc_transmit_cb,
+	.start    = i2cslave_cmdproc_start_cb,
+};
+
+static i2c_cmds *i2cslave_cmdproc_cmds;
+
 void i2cslave_init(unsigned int addr, i2c_cb *callbacks)
 {
      i2c_callbacks = callbacks;
@@ -46,6 +66,85 @@ void i2cslave_init(unsigned int addr, i2c_cb *callbacks)
      UCB0CTL1 	&= ~UCSWRST;
      IE2 		|= UCB0TXIE + UCB0RXIE;
      UCB0I2CIE 	|= UCSTTIE;
+}
+
+void i2cslave_cmdproc_init(unsigned int addr, i2c_cmds *cmds) 
+{
+	i2cslave_cmdproc_cmds = cmds;
+
+	i2cslave_init(addr, &i2cslave_cmdproc_cbs); 
+}
+
+void i2cslave_cmdproc_clrres() 
+{
+	int i;
+
+	i2cslave_cmdproc_res.count = 0;
+	i2cslave_cmdproc_res.xmit_count = 0;
+
+	for(i = 0; i < I2C_MAX_RES; i++) {
+		i2cslave_cmdproc_res.data[i] = 0;
+	}
+}
+
+int i2cslave_cmdproc_addres(unsigned char data) 
+{
+	if(i2cslave_cmdproc_res.count < I2C_MAX_RES) {
+		i2cslave_cmdproc_res.data[i2cslave_cmdproc_res.count++] = data;	
+		return 0;
+	}
+
+	return -1;
+}
+
+static void i2cslave_cmdproc_receive_cb(unsigned char data)
+{
+	int i;
+
+	if(i2cslave_cmdproc_last_cmd == -1) {
+		// not yet received command, see if data is known command
+		for(i = 0; i < i2cslave_cmdproc_cmds->count; i++) {
+			if(data == i2cslave_cmdproc_cmds->cmds[i].cmd) {
+				i2cslave_cmdproc_last_cmd = i;
+				if(i2cslave_cmdproc_cmds->cmds[i2cslave_cmdproc_last_cmd].args == 0) {
+					i2cslave_cmdproc_cmds->cmds[i2cslave_cmdproc_last_cmd].func(&i2cslave_cmdproc_last_args);
+				}
+				break;
+			}
+		}
+	}
+	else {
+		// already received command, see if data needs to be added to params
+		if(i2cslave_cmdproc_last_args.count < i2cslave_cmdproc_cmds->cmds[i2cslave_cmdproc_last_cmd].args) {
+			i2cslave_cmdproc_last_args.args[i2cslave_cmdproc_last_args.count++] = data;
+
+			if(i2cslave_cmdproc_last_args.count == i2cslave_cmdproc_cmds->cmds[i2cslave_cmdproc_last_cmd].args) {
+				i2cslave_cmdproc_cmds->cmds[i2cslave_cmdproc_last_cmd].func(&i2cslave_cmdproc_last_args);
+			}
+		}
+	}
+}
+
+static void i2cslave_cmdproc_transmit_cb(unsigned char volatile *data)
+{
+	if(i2cslave_cmdproc_res.xmit_count < i2cslave_cmdproc_res.count) {
+		*data = i2cslave_cmdproc_res.data[i2cslave_cmdproc_res.xmit_count++];
+	}
+	else {
+		*data = 0xff;
+	}
+}
+
+static void i2cslave_cmdproc_start_cb()
+{
+	int i; 
+
+	i2cslave_cmdproc_last_cmd = -1;
+	i2cslave_cmdproc_last_args.count = 0;
+
+	for(i = 0; i < I2C_MAX_ARGS; i++) {
+		i2cslave_cmdproc_last_args.args[i] = 0;
+	}
 }
 
 interrupt(USCIAB0TX_VECTOR) i2c_data_interrupt(void)

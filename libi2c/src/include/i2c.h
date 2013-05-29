@@ -22,6 +22,8 @@
 
 #define I2C_MAX_ARGS 	5
 
+#define I2C_MAX_RES 	25	
+
 typedef struct {
 	/**
  	 * Callback when data is received 
@@ -90,7 +92,43 @@ typedef struct {
 } i2c_cmds;
 
 /**
+ * Response 
+ */
+typedef struct {
+     /**
+      * Number of data
+      */
+     unsigned char	count;
+
+    /**
+      * Number of data already transmitted
+      */
+     unsigned char	xmit_count;
+
+     /**
+      * Response 
+      */
+     unsigned char	data[I2C_MAX_RES];
+} i2c_cmd_res;
+
+/**
+ *
  */
 void i2cslave_init(unsigned int addr, i2c_cb *callbacks);
+
+/**
+ *
+ */
+void i2cslave_cmdproc_init(unsigned int add, i2c_cmds *cmds); 
+
+/**
+ *
+ */
+void i2cslave_cmdproc_clrres();
+
+/**
+ *
+ */
+int i2cslave_cmdproc_addres(unsigned char data);
 
 #endif

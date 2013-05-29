@@ -69,76 +69,92 @@
 /* Commands */
 #define CMD_SETLED  0x00
 #define CMD_GETBTN  0x01
-#define CMD_UNKNOWN 0xFF
+#define CMD_GETINF  0x02
+#define CMD_ECHO3   0x03
 
 /* Parameters */
 #define PAR_LEDOFF  0x00
 #define PAR_LEDON   0x01
-#define PAR_UNKNOWN 0xFF
+#define PAR_INFVER	0x00
+#define PAR_INFID	0x01
 
-/* Responses */
-#define RES_ERROR   0xFF
-
-/* last command */
-unsigned char cmd = CMD_UNKNOWN;
-
-/* last parameter */
-unsigned char par = PAR_UNKNOWN;
-
-/* response to send out on read req. */
-unsigned char res = RES_ERROR;
-
-void process_cmd(unsigned char cmd, unsigned char par)
+void cmd_setled(i2c_cmd_args *args) 
 {
-    res = RES_ERROR;
-
-    switch(cmd) {
-    case CMD_SETLED:
 #ifdef MSP430
-        if(par == PAR_LEDON) {
-            P1OUT |= BIT0;
-        } else if(par == PAR_LEDOFF) {
-            P1OUT &= ~BIT0;
-        }
+	if(args->args[0] == PAR_LEDON) {
+    	P1OUT |= BIT0;
+	}
+	else if(args->args[0] == PAR_LEDOFF) {
+        P1OUT &= ~BIT0;
+	}
 #endif
-        break;
-    case CMD_GETBTN:
-#ifdef MSP430
-        if((P1IN & BIT3)) {
-            res = 0x01;
-        } else {
-            res = 0x00;
-        }
-#endif
-        break;
-    }
 }
 
-void start_cb()
+void cmd_getbtn(i2c_cmd_args *args) 
 {
-    cmd = CMD_UNKNOWN;
-    par = PAR_UNKNOWN;
-}
+	i2cslave_cmdproc_clrres();
 
-void receive_cb(unsigned char receive)
-{
-    if(cmd == CMD_UNKNOWN) {
-
-        cmd = receive;
-
-        if(cmd == CMD_GETBTN) {
-            process_cmd(cmd, PAR_UNKNOWN);
-        }
+#ifdef MSP430
+	if((P1IN & BIT3)) {
+		i2cslave_cmdproc_addres(0x01);
     } else {
-        par = receive;
-        process_cmd(cmd, par);
+		i2cslave_cmdproc_addres(0x00);
     }
+#endif
 }
 
-void transmit_cb(unsigned char volatile *byte)
+void cmd_getinf(i2c_cmd_args *args) 
 {
-    *byte = res;
+	i2cslave_cmdproc_clrres();
+
+	if(args->args[0] == PAR_INFVER) {
+		i2cslave_cmdproc_addres(0x00);
+		i2cslave_cmdproc_addres(0x01);
+	}
+	else if(args->args[0] == PAR_INFID) {
+		i2cslave_cmdproc_addres('L');
+		i2cslave_cmdproc_addres('I');
+		i2cslave_cmdproc_addres('B');
+		i2cslave_cmdproc_addres('E');
+		i2cslave_cmdproc_addres('M');
+		i2cslave_cmdproc_addres('B');
+	}
 }
+
+void cmd_echo3(i2c_cmd_args *args) 
+{
+	i2cslave_cmdproc_clrres();
+
+	i2cslave_cmdproc_addres(0xA0 + args->args[0]);
+	i2cslave_cmdproc_addres(0xA0 + args->args[1]);
+	i2cslave_cmdproc_addres(0xA0 + args->args[2]);
+}
+
+static i2c_cmds cmds = {
+     .count = 4,
+     .cmds	= {
+          {
+               .cmd		= CMD_SETLED,
+			   .args	= 1,
+               .func 	= cmd_setled,
+          },
+          {
+               .cmd		= CMD_GETBTN,
+			   .args	= 0,
+               .func 	= cmd_getbtn,
+          },
+          {
+               .cmd		= CMD_GETINF,
+			   .args	= 1,
+               .func 	= cmd_getinf,
+          },
+          {
+               .cmd		= CMD_ECHO3,
+			   .args	= 3,
+               .func 	= cmd_echo3,
+          },
+	},
+};
 
 void clock_init(void)
 {
@@ -166,17 +182,11 @@ void gpio_init(void)
 #endif
 }
 
-static i2c_cb callbacks = {
-	.receive  = receive_cb,
-	.transmit = transmit_cb,
-	.start    = start_cb,
-};
-
 int main(void)
 {
 	clock_init();
 	gpio_init();
-	i2cslave_init(I2C_ADDR, &callbacks);
+	i2cslave_cmdproc_init(I2C_ADDR, &cmds);
 	
 	while (1) {
 		__asm__("nop");
