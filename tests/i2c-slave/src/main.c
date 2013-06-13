@@ -47,11 +47,6 @@
  * - get BUTTON state (P1.3)
  *    [0x90 0x01 [0x91 r
  *
- * For a quick start to setup the I2C slave, the TI USCI I2C slave
- * code from slaa383 was used and slightly modified to work on
- * the MSP430G2553 and the MSP-GCC. For detail on leagal issues
- * regarding the TI_USCI_I2C_slave code see "ti-usci-i2c-slave-legal.txt".
- *
  * NOTE: 100k extrnal pull-ups are needed on SDA/SDC.
  */
 
