@@ -26,3 +26,19 @@ void i2cslave_init(unsigned int addr, i2c_cb *callbacks)
      i2c_callbacks = callbacks;
 }
 
+void i2cslave_cmdproc_init(unsigned int add, i2c_cmds *cmds) 
+{
+	/* TODO */
+}
+
+void i2cslave_cmdproc_clrres()
+{
+	/* TODO */
+}
+
+int i2cslave_cmdproc_addres(unsigned char data)
+{
+	/* TODO */
+
+	return 0;
+}

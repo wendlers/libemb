@@ -25,6 +25,11 @@
 
 void serial_init(unsigned int baudrate)
 {
+	serial_clk_init(0, baudrate);
+}
+
+void serial_clk_init(long clkspeed, unsigned int baudrate)
+{
 	/* Enable clock for USART1. */
 	rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_IOPAEN | RCC_APB2ENR_USART1EN);
 

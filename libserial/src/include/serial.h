@@ -28,6 +28,15 @@
 void serial_init(unsigned int baudrate);
 
 /**
+ * Initialize the default USART for given CLK speed with 
+ * given baudrate.
+ *
+ * @param[in]	clkspeed	the speed of the CLK for the USART 
+ * @param[in]	baudrate	the baudrate of the USART
+ */
+void serial_clk_init(long clkspeed, unsigned int baudrate);
+
+/**
  * Send a byte non-blocking through the default USART.
  *
  * @param[in]	data	byte to send
