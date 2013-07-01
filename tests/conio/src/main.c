@@ -30,8 +30,11 @@ void clock_init(void)
 {
 #ifdef MSP430
     WDTCTL = WDTPW + WDTHOLD;
-    BCSCTL1 = CALBC1_1MHZ;
-    DCOCTL  = CALDCO_1MHZ;
+    BCSCTL1 = CALBC1_16MHZ;
+    DCOCTL  = CALDCO_16MHZ;
+	// 1MHz
+    // BCSCTL1 = CALBC1_1MHZ;
+    // DCOCTL  = CALDCO_1MHZ;
 #else
 #ifdef STM32_100
 	rcc_clock_setup_in_hse_8mhz_out_24mhz();
@@ -44,7 +47,15 @@ void clock_init(void)
 int main(void)
 {
 	clock_init();
+
+#ifdef MSP430
+	// 16Mhz
+	serial_clk_init(16000000L, 9600);
+	// 1MHz
+	// serial_init(9600);
+#else
 	serial_init(9600);
+#endif
 
 	cio_print("conio\n\r");
 

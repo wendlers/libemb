@@ -43,14 +43,51 @@ void serial_clk_init(long clkspeed, unsigned int baudrate)
 {
 	P1SEL    |= UART_RXD + UART_TXD;                       
   	P1SEL2   |= UART_RXD + UART_TXD;                       
-  	UCA0CTL1 |= UCSSEL_2;                   // SMCLK
+  	UCA0CTL1 |= UCSSEL_2; 
 
-	unsigned char br = (unsigned char)(clkspeed / (long)baudrate);
-
-  	UCA0BR0  = br;                          // 1MHz / baudrate 
-  	UCA0BR1  = 0;                           // 
-  	UCA0MCTL = UCBRS0;                      // Modulation UCBRSx = 1
-  	UCA0CTL1 &= ~UCSWRST;                   // Initialize USCI state machine
+	switch(clkspeed) {
+		case  1000000L:
+			switch(baudrate) {
+				case   9600: UCA0BR0 = 0x06; UCA0MCTL = 0x81; break;
+				case  19200: UCA0BR0 = 0x03; UCA0MCTL = 0x41; break;
+				case  57600: UCA0BR0 = 0x01; UCA0MCTL = 0x0F; break;
+				default    : UCA0BR0 = 0x06; UCA0MCTL = 0x81; break;
+			};
+			break;
+		case  8000000L:
+			switch(baudrate) {
+				case   9600: UCA0BR0 = 0x34; UCA0MCTL = 0x11; break;
+				case  19200: UCA0BR0 = 0x1a; UCA0MCTL = 0x11; break;
+				case  38400: UCA0BR0 = 0x0d; UCA0MCTL = 0x01; break;
+				case  57600: UCA0BR0 = 0x08; UCA0MCTL = 0xb1; break;
+				case 115200: UCA0BR0 = 0x04; UCA0MCTL = 0x3b; break;
+				case 230400: UCA0BR0 = 0x02; UCA0MCTL = 0x27; break;	
+				default    : UCA0BR0 = 0x34; UCA0MCTL = 0x11; break;
+			};
+			break;
+		case 16000000L:
+			switch(baudrate) {
+				case   9600: UCA0BR0 = 0x68; UCA0MCTL = 0x31; break;
+				case  19200: UCA0BR0 = 0x34; UCA0MCTL = 0x11; break;
+				case  38400: UCA0BR0 = 0x1a; UCA0MCTL = 0x11; break;
+				case  57600: UCA0BR0 = 0x11; UCA0MCTL = 0x61; break;
+				case 115200: UCA0BR0 = 0x08; UCA0MCTL = 0xb1; break;
+				case 230400: UCA0BR0 = 0x04; UCA0MCTL = 0x3b; break;	
+				default    : UCA0BR0 = 0x68; UCA0MCTL = 0x31; break;
+			};
+			break;
+		default:
+			switch(baudrate) {
+				case   9600: UCA0BR0 = 0x06; UCA0MCTL = 0x81; break;
+				case  19200: UCA0BR0 = 0x03; UCA0MCTL = 0x41; break;
+				case  57600: UCA0BR0 = 0x01; UCA0MCTL = 0x0F; break;
+				default    : UCA0BR0 = 0x06; UCA0MCTL = 0x81; break;
+			};
+			break;
+	}
+ 
+  	UCA0BR1   = 0;
+  	UCA0CTL1 &= ~UCSWRST; 
 }
 
 void serial_send(unsigned char data)
