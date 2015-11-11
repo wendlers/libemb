@@ -35,9 +35,9 @@ check:
 	make -C $(SRCDIR) check
 
 install: target
-	install -D -d -m 755 $(INSTDIR)/lib
+	install -d -m 755 $(INSTDIR)/lib
 	install -m 644 ./lib/*.a $(INSTDIR)/lib/.
-	install -D -d -m 755 $(INSTDIR)/include/libemb/conio
+	install -d -m 755 $(INSTDIR)/include/libemb/conio
 	install -m 644 ./src/include/*.h $(INSTDIR)/include/libemb/conio/.
 
 deploy-bin: clean target gen-docs 

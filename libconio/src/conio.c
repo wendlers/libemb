@@ -53,13 +53,10 @@ void cio_printi(int n)
 
 void cio_printb(int n, int size)
 {
-
      int i;
 
-     int mask = 1 << (size - 1);
-
-     for(i = 0; i < size; i++) {
-          if((n & (mask >> i)) != 0) {
+     for(i = size - 1; i >= 0; i--) {
+          if((n >> i) & 1) {
                cio_printc('1');
           } else {
                cio_printc('0');
