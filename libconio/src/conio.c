@@ -122,9 +122,10 @@ void cio_printf(char *format, ...)
                     cio_printc((char)va_arg(a, int));
                     break;
                case 'i':                       // 16 bit Integer
+               case 'd':                       // 16 bit Integer
                case 'u':                       // 16 bit Unsigned
                     i = va_arg(a, int);
-                    if(c == 'i' && i < 0) i = -i, cio_printc('-');
+                    if((c == 'i' || c =='d') && i < 0) i = -i, cio_printc('-');
                     _xtoa((unsigned)i, _dv + 5);
                     break;
                case 'l':                       // 32 bit Long
