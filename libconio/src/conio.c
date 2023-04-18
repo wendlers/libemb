@@ -53,13 +53,10 @@ void cio_printi(int n)
 
 void cio_printb(int n, int size)
 {
-
      int i;
 
-     int mask = 1 << (size - 1);
-
-     for(i = 0; i < size; i++) {
-          if((n & (mask >> i)) != 0) {
+     for(i = size - 1; i >= 0; i--) {
+          if((n >> i) & 1) {
                cio_printc('1');
           } else {
                cio_printc('0');
@@ -125,9 +122,10 @@ void cio_printf(char *format, ...)
                     cio_printc((char)va_arg(a, int));
                     break;
                case 'i':                       // 16 bit Integer
+               case 'd':                       // 16 bit Integer
                case 'u':                       // 16 bit Unsigned
                     i = va_arg(a, int);
-                    if(c == 'i' && i < 0) i = -i, cio_printc('-');
+                    if((c == 'i' || c =='d') && i < 0) i = -i, cio_printc('-');
                     _xtoa((unsigned)i, _dv + 5);
                     break;
                case 'l':                       // 32 bit Long

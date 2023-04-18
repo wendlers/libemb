@@ -36,9 +36,9 @@ check:
 	make -C $(SRCDIR) check
 
 install: target
-	install -D -d -m 755 $(INSTDIR)/lib
+	install -d -m 755 $(INSTDIR)/lib
 	install -m 644 ./lib/*.a $(INSTDIR)/lib/.
-	install -D -d -m 755 $(INSTDIR)/include/libemb/nrf24l01
+	install -d -m 755 $(INSTDIR)/include/libemb/nrf24l01
 	install -m 644 ./src/include/*.h $(INSTDIR)/include/libemb/nrf24l01/.
 
 deploy-bin: clean target gen-docs
